@@ -26,10 +26,10 @@
 #include <math.h>
 #include <string.h>
 
-#include "sundialstypes.h"
-#include "nvector_serial.h"
+#include <sundials/sundials_types.h>
+#include <nvector/nvector_serial.h>
 #include "pihm.h"
-
+#include <assert.h>
 
 void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
 {
@@ -41,34 +41,34 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
   char *fn;
   realtype *zmin_cor;
 
-  zmin_cor=(realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(zmin_cor=(realtype *)malloc(DS->NumEle*sizeof(realtype)));
 
-  printf("\nInitializing data structure ... ");
+  printf("\nInitializing data structure ...\n");
 
   /* allocate memory storage to flux terms */
-  DS->FluxSurf = (realtype **)malloc(DS->NumEle*sizeof(realtype));
-  DS->FluxSub = (realtype **)malloc(DS->NumEle*sizeof(realtype));
-  DS->FluxRiv = (realtype **)malloc(DS->NumRiv*sizeof(realtype));
-  DS->EleET = (realtype **)malloc(DS->NumEle*sizeof(realtype));
-  DS->ElePrep = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleViR = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->Recharge = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleIS = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleISmax = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleISsnowmax = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleSnow = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleSnowGrnd = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleSnowCanopy = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleTF = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleETloss = (realtype *)malloc(DS->NumEle*sizeof(realtype));
-  DS->EleNetPrep = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->FluxSurf = (realtype **)malloc(DS->NumEle*sizeof(realtype*)));
+  assert(DS->FluxSub = (realtype **)malloc(DS->NumEle*sizeof(realtype*)));
+  assert(DS->FluxRiv = (realtype **)malloc(DS->NumRiv*sizeof(realtype*)));
+  assert(DS->EleET = (realtype **)malloc(DS->NumEle*sizeof(realtype*)));
+  assert(DS->ElePrep = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleViR = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->Recharge = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleIS = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleISmax = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleISsnowmax = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleSnow = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleSnowGrnd = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleSnowCanopy = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleTF = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleETloss = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->EleNetPrep = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
 
 
   for(i=0; i<DS->NumEle; i++)
   {
-    DS->FluxSurf[i] = (realtype *)malloc(3*sizeof(realtype));
-    DS->FluxSub[i] = (realtype *)malloc(3*sizeof(realtype));
-    DS->EleET[i] = (realtype *)malloc(4*sizeof(realtype));
+    assert(DS->FluxSurf[i] = (realtype *)malloc(3*sizeof(realtype)));
+    assert(DS->FluxSub[i] = (realtype *)malloc(3*sizeof(realtype)));
+    assert(DS->EleET[i] = (realtype *)malloc(4*sizeof(realtype)));
 
     a_x = DS->Node[DS->Ele[i].node[0]-1].x;
     b_x = DS->Node[DS->Ele[i].node[1]-1].x;
@@ -143,7 +143,7 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
   }
   for(i=0; i<DS->NumRiv; i++)
   {
-    DS->FluxRiv[i] = (realtype *)malloc(11*sizeof(realtype));
+    assert(DS->FluxRiv[i] = (realtype *)malloc(11*sizeof(realtype)));
     for(j=0; j<3; j++)
     {
       /* Note: Strategy to use BC < -4 for river identification */
@@ -198,15 +198,15 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
   {
     if(i==0)
     {
-      DS->PrintVar[i]=(realtype *)calloc(DS->NumEle+DS->NumRiv,sizeof(realtype));
+      assert(DS->PrintVar[i]=(realtype *)calloc(DS->NumEle+DS->NumRiv,sizeof(realtype)));
     }
     else if((i>=7)&&(i<19))
     {
-      DS->PrintVar[i]=(realtype *)calloc(DS->NumRiv,sizeof(realtype));
+      assert(DS->PrintVar[i]=(realtype *)calloc(DS->NumRiv,sizeof(realtype)));
     }
     else
     {
-      DS->PrintVar[i]=(realtype *)calloc(DS->NumEle,sizeof(realtype));
+      assert(DS->PrintVar[i]=(realtype *)calloc(DS->NumEle,sizeof(realtype)));
     }
   }
   /* Debugging artifacts in data created due to coarser resolution of model elements */
@@ -248,7 +248,8 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
       }
     }
     /* Correction of BedRck Elev. Is this needed? */
-    printf("\n Do you want to correct Bed Rock Elev too (1[y]/0[n])");
+    printf("\n Do you want to correct Bed Rock Elev too (1[y]/0[n])\n");
+//		BoolBR = 1;
     scanf("%d",&BoolBR);
     if(BoolBR==1)
     {
@@ -403,7 +404,7 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
   /* hot start mode */
   else
   {
-    fn = (char *)malloc((strlen(filename)+5)*sizeof(char));
+    assert(fn = (char *)malloc((strlen(filename)+5)*sizeof(char)));
     strcpy(fn, filename);
     init_file = fopen(strcat(fn, ".init"), "r");
 

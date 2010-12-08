@@ -29,8 +29,8 @@
  *--------------------------------------------------------------------------------*
  **********************************************************************************/
 
-#include "sundialstypes.h"
-#include "nvector_serial.h"
+#include <sundials/sundials_types.h>
+#include <nvector/nvector_serial.h>
 
 /* Definition of Global Variable Types */
 

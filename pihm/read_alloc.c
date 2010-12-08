@@ -27,9 +27,9 @@
 #include <math.h>
 #include <string.h>
 
-#include "sundialstypes.h"
+#include <sundials/sundials_types.h>
 #include "pihm.h"
-
+#include <assert.h>
 
 void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 {
@@ -56,7 +56,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.riv file ==========*/
   printf("\n  1) reading %s.riv  ... ", filename);
-  fn[0] = (char *)malloc((strlen(filename)+4)*sizeof(char));
+  assert(fn[0] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
   strcpy(fn[0], filename);
   riv_file =  fopen(strcat(fn[0], ".riv"), "r");
 
@@ -69,8 +69,8 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   /* start reading riv_file */
   fscanf(riv_file, "%d", &DS->NumRiv);
 
-  DS->Riv = (river_segment *)malloc(DS->NumRiv*sizeof(river_segment));
-  DS->Riv_IC = (river_IC *)malloc(DS->NumRiv*sizeof(river_IC));
+  assert(DS->Riv = (river_segment *)malloc(DS->NumRiv*sizeof(river_segment)));
+//    assert(DS->Riv_IC = (river_IC *)malloc(DS->NumRiv*sizeof(river_IC)));
 
   for (i=0; i<DS->NumRiv; i++)
   {
@@ -84,7 +84,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   }
 
   fscanf(riv_file, "%s %d", tempchar, &DS->NumRivShape);
-  DS->Riv_Shape = (river_shape *)malloc(DS->NumRivShape*sizeof(river_shape));
+  assert(DS->Riv_Shape = (river_shape *)malloc(DS->NumRivShape*sizeof(river_shape)));
 
   for (i=0; i<DS->NumRivShape; i++)
   {
@@ -94,7 +94,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   }
 
   fscanf(riv_file, "%s %d", tempchar, &DS->NumRivMaterial);
-  DS->Riv_Mat = (river_material *)malloc(DS->NumRivMaterial*sizeof(river_material));
+  assert(DS->Riv_Mat = (river_material *)malloc(DS->NumRivMaterial*sizeof(river_material)));
 
   for (i=0; i<DS->NumRivMaterial; i++)
   {
@@ -102,7 +102,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   }
 
   fscanf(riv_file, "%s %d", tempchar, &DS->NumRivIC);
-  DS->Riv_IC = (river_IC *)malloc(DS->NumRivIC*sizeof(river_IC));
+  assert(DS->Riv_IC = (river_IC *)malloc(DS->NumRivIC*sizeof(river_IC)));
 
   for (i=0; i<DS->NumRivIC; i++)
   {
@@ -110,16 +110,16 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   }
 
   fscanf(riv_file, "%s %d", tempchar, &DS->NumRivBC);
-  DS->TSD_Riv = (TSD *)malloc(DS->NumRivBC*sizeof(TSD));
+  assert(DS->TSD_Riv = (TSD *)malloc(DS->NumRivBC*sizeof(TSD)));
 
   for(i=0; i<DS->NumRivBC; i++)
   {
     fscanf(riv_file, "%s %d %d", DS->TSD_Riv[i].name, &DS->TSD_Riv[i].index, &DS->TSD_Riv[i].length);
 
-    DS->TSD_Riv[i].TS = (realtype **)malloc((DS->TSD_Riv[i].length)*sizeof(realtype));
+    assert(DS->TSD_Riv[i].TS = (realtype **)malloc((DS->TSD_Riv[i].length)*sizeof(realtype)));
     for(j=0; j<DS->TSD_Riv[i].length; j++)
     {
-      DS->TSD_Riv[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_Riv[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_Riv[i].length; j++)
@@ -141,7 +141,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.mesh file ==========*/
   printf("\n  2) reading %s.mesh ... ", filename);
-  fn[1] = (char *)malloc((strlen(filename)+5)*sizeof(char));
+  assert(fn[1] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(fn[1], filename);
   mesh_file = fopen(strcat(fn[1], ".mesh"), "r");
 
@@ -154,8 +154,8 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   /* start reading mesh_file */
   fscanf(mesh_file,"%d %d", &DS->NumEle, &DS->NumNode);
 
-  DS->Ele = (element *)malloc((DS->NumEle+DS->NumRiv)*sizeof(element));
-  DS->Node = (nodes *)malloc(DS->NumNode*sizeof(nodes));
+  assert(DS->Ele = (element *)malloc((DS->NumEle+DS->NumRiv)*sizeof(element)));
+  assert(DS->Node = (nodes *)malloc(DS->NumNode*sizeof(nodes)));
 
   /* read in elements information */
   for (i=0; i<DS->NumEle; i++)
@@ -180,7 +180,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.att file ==========*/
   printf("\n  3) reading %s.att  ... ", filename);
-  fn[2] = (char *)malloc((strlen(filename)+4)*sizeof(char));
+  assert(fn[2] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
   strcpy(fn[2], filename);
   att_file = fopen(strcat(fn[2], ".att"), "r");
 
@@ -191,7 +191,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   }
 
   /* start reading att_file */
-  DS->Ele_IC = (element_IC *)malloc(DS->NumEle*sizeof(element_IC));
+  assert(DS->Ele_IC = (element_IC *)malloc(DS->NumEle*sizeof(element_IC)));
   for (i=0; i<DS->NumEle; i++)
   {
     fscanf(att_file, "%d", &(tempindex));
@@ -215,7 +215,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.soil file ==========*/
   printf("\n  4) reading %s.soil ... ", filename);
-  fn[3] = (char *)malloc((strlen(filename)+5)*sizeof(char));
+  assert(fn[3] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(fn[3], filename);
   soil_file = fopen(strcat(fn[3], ".soil"), "r");
 
@@ -227,7 +227,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /* start reading soil_file */
   fscanf(soil_file, "%d", &DS->NumSoil);
-  DS->Soil = (soils *)malloc(DS->NumSoil*sizeof(soils));
+  assert(DS->Soil = (soils *)malloc(DS->NumSoil*sizeof(soils)));
 
   for (i=0; i<DS->NumSoil; i++)
   {
@@ -244,7 +244,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.geol file ==========*/
   printf("\n  5) reading %s.geol ... ", filename);
-  fn[4] = (char *)malloc((strlen(filename)+5)*sizeof(char));
+  assert(fn[4] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(fn[4], filename);
   geol_file = fopen(strcat(fn[4], ".geol"), "r");
 
@@ -256,7 +256,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /* start reading soil_file */
   fscanf(geol_file, "%d", &DS->NumGeol);
-  DS->Geol = (geol *)malloc(DS->NumGeol*sizeof(geol));
+  assert(DS->Geol = (geol *)malloc(DS->NumGeol*sizeof(geol)));
 
   for (i=0; i<DS->NumGeol; i++)
   {
@@ -264,8 +264,8 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     /* Geol macKsatV is not used in model calculation anywhere */
     fscanf(geol_file, "%lf %lf", &(DS->Geol[i].KsatH),&(DS->Geol[i].KsatV));
     fscanf(geol_file, "%lf %lf", &(DS->Geol[i].ThetaS), &(DS->Geol[i].ThetaR));
-    fscanf(soil_file, "%lf %lf", &(DS->Geol[i].Alpha), &(DS->Geol[i].Beta));
-    fscanf(soil_file, "%lf %lf %lf", &(DS->Geol[i].vAreaF),&(DS->Geol[i].macKsatH),&(DS->Geol[i].macD));
+    fscanf(geol_file, "%lf %lf", &(DS->Geol[i].Alpha), &(DS->Geol[i].Beta));
+    fscanf(geol_file, "%lf %lf %lf", &(DS->Geol[i].vAreaF),&(DS->Geol[i].macKsatH),&(DS->Geol[i].macD));
   }
 
   fclose(geol_file);
@@ -274,7 +274,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.lc file ==========*/
   printf("\n  6) reading %s.lc ... ", filename);
-  fn[5] = (char *)malloc((strlen(filename)+3)*sizeof(char));
+  assert(fn[5] = (char *)malloc((strlen(filename)+3)*sizeof(char)));
   strcpy(fn[5], filename);
   lc_file = fopen(strcat(fn[5], ".lc"), "r");
 
@@ -287,7 +287,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   /* start reading land cover file */
   fscanf(lc_file, "%d", &DS->NumLC);
 
-  DS->LandC = (LC *)malloc(DS->NumLC*sizeof(LC));
+  assert(DS->LandC = (LC *)malloc(DS->NumLC*sizeof(LC)));
 
   for (i=0; i<DS->NumLC; i++)
   {
@@ -304,7 +304,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.forc file ==========*/
   printf("\n  7) reading %s.forc ... ", filename);
-  fn[6] = (char *)malloc((strlen(filename)+5)*sizeof(char));
+  assert(fn[6] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(fn[6], filename);
   forc_file = fopen(strcat(fn[6], ".forc"), "r");
 
@@ -322,30 +322,42 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   fscanf(forc_file, "%d", &DS->NumMeltF);
   fscanf(forc_file, "%d", &DS->NumSource);
 
-  DS->TSD_Prep = (TSD *)malloc(DS->NumPrep*sizeof(TSD));
-  DS->TSD_Temp = (TSD *)malloc(DS->NumTemp*sizeof(TSD));
-  DS->TSD_Humidity = (TSD *)malloc(DS->NumHumidity*sizeof(TSD));
-  DS->TSD_WindVel = (TSD *)malloc(DS->NumWindVel*sizeof(TSD));
-  DS->TSD_Rn = (TSD *)malloc(DS->NumRn*sizeof(TSD));
-  DS->TSD_G = (TSD *)malloc(DS->NumG*sizeof(TSD));
-  DS->TSD_Pressure = (TSD *)malloc(DS->NumP*sizeof(TSD));
-  DS->TSD_LAI = (TSD *)malloc(DS->NumLC*sizeof(TSD));
-  DS->TSD_RL = (TSD *)malloc(DS->NumLC*sizeof(TSD));
-  DS->TSD_MeltF = (TSD *)malloc(DS->NumMeltF*sizeof(TSD));
-  DS->TSD_Source = (TSD *)malloc(DS->NumSource*sizeof(TSD));
+  assert(DS->TSD_Prep = (TSD *)malloc(DS->NumPrep*sizeof(TSD)));
+  assert(DS->TSD_Temp = (TSD *)malloc(DS->NumTemp*sizeof(TSD)));
+  assert(DS->TSD_Humidity = (TSD *)malloc(DS->NumHumidity*sizeof(TSD)));
+  assert(DS->TSD_WindVel = (TSD *)malloc(DS->NumWindVel*sizeof(TSD)));
+  assert(DS->TSD_Rn = (TSD *)malloc(DS->NumRn*sizeof(TSD)));
+  assert(DS->TSD_G = (TSD *)malloc(DS->NumG*sizeof(TSD)));
+  assert(DS->TSD_Pressure = (TSD *)malloc(DS->NumP*sizeof(TSD)));
+  assert(DS->TSD_LAI = (TSD *)malloc(DS->NumLC*sizeof(TSD)));
+  assert(DS->TSD_RL = (TSD *)malloc(DS->NumLC*sizeof(TSD)));
+  assert(DS->TSD_MeltF = (TSD *)malloc(DS->NumMeltF*sizeof(TSD)));
+  assert(DS->TSD_Source = (TSD *)malloc(DS->NumSource*sizeof(TSD)));
 
-  DS->ISFactor = (realtype *)malloc(DS->NumLC*sizeof(realtype));
-  DS->windH = (realtype *)malloc(DS->NumWindVel*sizeof(realtype));
+  memset(DS->TSD_Prep, 0, DS->NumPrep*sizeof(TSD));
+  memset(DS->TSD_Temp, 0, DS->NumTemp*sizeof(TSD));
+  memset(DS->TSD_Humidity, 0, DS->NumHumidity*sizeof(TSD));
+  memset(DS->TSD_WindVel, 0, DS->NumWindVel*sizeof(TSD));
+  memset(DS->TSD_Rn, 0, DS->NumRn*sizeof(TSD));
+  memset(DS->TSD_G, 0, DS->NumG*sizeof(TSD));
+  memset(DS->TSD_Pressure, 0, DS->NumP*sizeof(TSD));
+  memset(DS->TSD_LAI, 0, DS->NumLC*sizeof(TSD));
+  memset(DS->TSD_RL, 0, DS->NumLC*sizeof(TSD));
+  memset(DS->TSD_MeltF, 0, DS->NumMeltF*sizeof(TSD));
+  memset(DS->TSD_Source, 0, DS->NumSource*sizeof(TSD));
+
+  assert(DS->ISFactor = (realtype *)malloc(DS->NumLC*sizeof(realtype)));
+  assert(DS->windH = (realtype *)malloc(DS->NumWindVel*sizeof(realtype)));
 
   for(i=0; i<DS->NumPrep; i++)
   {
     fscanf(forc_file, "%s %d %d", DS->TSD_Prep[i].name, &DS->TSD_Prep[i].index, &DS->TSD_Prep[i].length);
 
-    DS->TSD_Prep[i].TS = (realtype **)malloc((DS->TSD_Prep[i].length)*sizeof(realtype));
+    assert(DS->TSD_Prep[i].TS = (realtype **)malloc((DS->TSD_Prep[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_Prep[i].length; j++)
     {
-      DS->TSD_Prep[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_Prep[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_Prep[i].length; j++)
@@ -358,11 +370,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     fscanf(forc_file, "%s %d %d", DS->TSD_Temp[i].name, &DS->TSD_Temp[i].index, &DS->TSD_Temp[i].length);
 
-    DS->TSD_Temp[i].TS = (realtype **)malloc((DS->TSD_Temp[i].length)*sizeof(realtype));
+    assert(DS->TSD_Temp[i].TS = (realtype **)malloc((DS->TSD_Temp[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_Temp[i].length; j++)
     {
-      DS->TSD_Temp[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_Temp[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_Temp[i].length; j++)
@@ -375,11 +387,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     fscanf(forc_file, "%s %d %d", DS->TSD_Humidity[i].name, &DS->TSD_Humidity[i].index, &DS->TSD_Humidity[i].length);
 
-    DS->TSD_Humidity[i].TS = (realtype **)malloc((DS->TSD_Humidity[i].length)*sizeof(realtype));
+    assert(DS->TSD_Humidity[i].TS = (realtype **)malloc((DS->TSD_Humidity[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_Humidity[i].length; j++)
     {
-      DS->TSD_Humidity[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_Humidity[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_Humidity[i].length; j++)
@@ -391,11 +403,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   for(i=0; i<DS->NumWindVel; i++)
   {
     fscanf(forc_file, "%s %d %d %lf", DS->TSD_WindVel[i].name, &DS->TSD_WindVel[i].index, &DS->TSD_WindVel[i].length, &DS->windH[i]);
-    DS->TSD_WindVel[i].TS = (realtype **)malloc((DS->TSD_WindVel[i].length)*sizeof(realtype));
+    assert(DS->TSD_WindVel[i].TS = (realtype **)malloc((DS->TSD_WindVel[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_WindVel[i].length; j++)
     {
-      DS->TSD_WindVel[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_WindVel[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_WindVel[i].length; j++)
@@ -408,11 +420,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     fscanf(forc_file, "%s %d %d", DS->TSD_Rn[i].name, &DS->TSD_Rn[i].index, &DS->TSD_Rn[i].length);
 
-    DS->TSD_Rn[i].TS = (realtype **)malloc((DS->TSD_Rn[i].length)*sizeof(realtype));
+    assert(DS->TSD_Rn[i].TS = (realtype **)malloc((DS->TSD_Rn[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_Rn[i].length; j++)
     {
-      DS->TSD_Rn[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_Rn[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_Rn[i].length; j++)
@@ -425,11 +437,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     fscanf(forc_file, "%s %d %d", DS->TSD_G[i].name, &DS->TSD_G[i].index, &DS->TSD_G[i].length);
 
-    DS->TSD_G[i].TS = (realtype **)malloc((DS->TSD_G[i].length)*sizeof(realtype));
+    assert(DS->TSD_G[i].TS = (realtype **)malloc((DS->TSD_G[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_G[i].length; j++)
     {
-      DS->TSD_G[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_G[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_G[i].length; j++)
@@ -442,11 +454,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     fscanf(forc_file, "%s %d %d", DS->TSD_Pressure[i].name, &DS->TSD_Pressure[i].index, &DS->TSD_Pressure[i].length);
 
-    DS->TSD_Pressure[i].TS = (realtype **)malloc((DS->TSD_Pressure[i].length)*sizeof(realtype));
+    assert(DS->TSD_Pressure[i].TS = (realtype **)malloc((DS->TSD_Pressure[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_Pressure[i].length; j++)
     {
-      DS->TSD_Pressure[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_Pressure[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_Pressure[i].length; j++)
@@ -459,11 +471,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     fscanf(forc_file, "%s %d %d %lf", DS->TSD_LAI[i].name, &DS->TSD_LAI[i].index, &DS->TSD_LAI[i].length, &DS->ISFactor[i]);
 
-    DS->TSD_LAI[i].TS = (realtype **)malloc((DS->TSD_LAI[i].length)*sizeof(realtype));
+    assert(DS->TSD_LAI[i].TS = (realtype **)malloc((DS->TSD_LAI[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_LAI[i].length; j++)
     {
-      DS->TSD_LAI[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_LAI[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_LAI[i].length; j++)
@@ -476,11 +488,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     fscanf(forc_file, "%s %d %d", DS->TSD_RL[i].name, &DS->TSD_RL[i].index, &DS->TSD_RL[i].length);
 
-    DS->TSD_RL[i].TS = (realtype **)malloc((DS->TSD_RL[i].length)*sizeof(realtype));
+    assert(DS->TSD_RL[i].TS = (realtype **)malloc((DS->TSD_RL[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_RL[i].length; j++)
     {
-      DS->TSD_RL[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_RL[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_RL[i].length; j++)
@@ -493,11 +505,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     fscanf(forc_file, "%s %d %d", DS->TSD_MeltF[i].name, &DS->TSD_MeltF[i].index, &DS->TSD_MeltF[i].length);
 
-    DS->TSD_MeltF[i].TS = (realtype **)malloc((DS->TSD_MeltF[i].length)*sizeof(realtype));
+    assert(DS->TSD_MeltF[i].TS = (realtype **)malloc((DS->TSD_MeltF[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_MeltF[i].length; j++)
     {
-      DS->TSD_MeltF[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_MeltF[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_MeltF[i].length; j++)
@@ -510,11 +522,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     fscanf(forc_file, "%s %d %d", DS->TSD_Source[i].name, &DS->TSD_Source[i].index, &DS->TSD_Source[i].length);
 
-    DS->TSD_Source[i].TS = (realtype **)malloc((DS->TSD_Source[i].length)*sizeof(realtype));
+    assert(DS->TSD_Source[i].TS = (realtype **)malloc((DS->TSD_Source[i].length)*sizeof(realtype)));
 
     for(j=0; j<DS->TSD_Source[i].length; j++)
     {
-      DS->TSD_Source[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+      assert(DS->TSD_Source[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
     }
 
     for(j=0; j<DS->TSD_Source[i].length; j++)
@@ -528,7 +540,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.ibc file ==========*/
   printf("\n  8) reading %s.ibc  ... ", filename);
-  fn[7] = (char *)malloc((strlen(filename)+4)*sizeof(char));
+  assert(fn[7] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
   strcpy(fn[7], filename);
   ibc_file =  fopen(strcat(fn[7], ".ibc"), "r");
 
@@ -543,7 +555,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   if(DS->Num1BC+DS->Num2BC > 0)
   {
-    DS->TSD_EleBC = (TSD *)malloc((DS->Num1BC+DS->Num2BC)*sizeof(TSD));
+    assert(DS->TSD_EleBC = (TSD *)malloc((DS->Num1BC+DS->Num2BC)*sizeof(TSD)));
   }
 
   if(DS->Num1BC>0)
@@ -553,11 +565,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(ibc_file, "%s %d %d", DS->TSD_EleBC[i].name, &DS->TSD_EleBC[i].index,&DS->TSD_EleBC[i].length);
 
-      DS->TSD_EleBC[i].TS = (realtype **)malloc((DS->TSD_EleBC[i].length)*sizeof(realtype));
+      assert(DS->TSD_EleBC[i].TS = (realtype **)malloc((DS->TSD_EleBC[i].length)*sizeof(realtype)));
 
       for(j=0; j<DS->TSD_EleBC[i].length; j++)
       {
-        DS->TSD_EleBC[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+        assert(DS->TSD_EleBC[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
       }
 
       for(j=0; j<DS->TSD_EleBC[i].length; j++)
@@ -574,11 +586,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(ibc_file, "%s %d %d", DS->TSD_EleBC[i].name, &DS->TSD_EleBC[i].index,&DS->TSD_EleBC[i].length);
 
-      DS->TSD_EleBC[i].TS = (realtype **)malloc((DS->TSD_EleBC[i].length)*sizeof(realtype));
+      assert(DS->TSD_EleBC[i].TS = (realtype **)malloc((DS->TSD_EleBC[i].length)*sizeof(realtype)));
 
       for(j=0; j<DS->TSD_EleBC[i].length; j++)
       {
-        DS->TSD_EleBC[i].TS[j] = (realtype *)malloc(2*sizeof(realtype));
+        assert(DS->TSD_EleBC[i].TS[j] = (realtype *)malloc(2*sizeof(realtype)));
       }
       for(j=0; j<DS->TSD_EleBC[i].length; j++)
       {
@@ -591,7 +603,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.para file ==========*/
   printf("\n  9) reading %s.para ... ", filename);
-  fn[8] = (char *)malloc((strlen(filename)+5)*sizeof(char));
+  assert(fn[8] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(fn[8], filename);
   para_file = fopen(strcat(fn[8], ".para"), "r");
 
@@ -647,7 +659,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   CS->NumSteps = NumTout + 1;
 
-  CS->Tout = (realtype *)malloc((CS->NumSteps + 1)*sizeof(realtype));
+  assert(CS->Tout = (realtype *)malloc((CS->NumSteps + 1)*sizeof(realtype)));
 
   for(i=0; i<CS->NumSteps+1; i++)
   {
@@ -673,7 +685,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========= open *.calib file ==========*/
   printf("\n  10) reading %s.calib ... ", filename);
-  fn[9] = (char *)malloc((strlen(filename)+6)*sizeof(char));
+  assert(fn[9] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
   strcpy(fn[9], filename);
   global_calib = fopen(strcat(fn[9], ".calib"), "r");
 

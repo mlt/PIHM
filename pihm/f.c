@@ -77,8 +77,8 @@
 #include <math.h>
 #include <string.h>
 
-#include "nvector_serial.h"
-#include "sundialstypes.h"
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_types.h>
 #include "pihm.h"
 #define multF 2
 #define MINpsi  -70
@@ -131,17 +131,17 @@ realtype CS_AreaOrPerem(int rivOrder, realtype rivDepth, realtype rivCoeff, real
     return returnVal(rivArea, rivPerem, eq_Wid, a_pBool);
   default:
     printf("\n Relevant Values entered are wrong");
-    printf("\n Depth: %lf\tCoeff: %lf\tOrder: %d\t");
+//			printf("\n Depth: %lf\tCoeff: %lf\tOrder: %d\t");
     return 0;
   }
 }
 
-OverlandFlow(realtype **flux, int loci, int locj, realtype avg_y, realtype grad_y, realtype avg_sf, realtype crossA, realtype avg_rough)
+void OverlandFlow(realtype **flux, int loci, int locj, realtype avg_y, realtype grad_y, realtype avg_sf, realtype crossA, realtype avg_rough)
 {
   flux[loci][locj] = crossA*pow(avg_y, 2.0/3.0)*grad_y/(sqrt(fabs(avg_sf))*avg_rough);
 //	flux[loci][locj] = (grad_y>0?1:-1)*crossA*pow(avg_y, 2.0/3.0)*sqrt(fabs(grad_y))/(avg_rough);
 }
-OLFeleToriv(realtype eleYtot,realtype EleZ,realtype cwr,realtype rivZmax,realtype rivYtot,realtype **fluxriv,int loci,int locj,realtype length)
+void OLFeleToriv(realtype eleYtot,realtype EleZ,realtype cwr,realtype rivZmax,realtype rivYtot,realtype **fluxriv,int loci,int locj,realtype length)
 {
   realtype threshEle;
   if(rivZmax < EleZ)
@@ -296,7 +296,7 @@ realtype effKH(int mp,realtype tmpY, realtype aqDepth, realtype MacD, realtype M
     return ksatH;
   }
 }
-void f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
+int f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
 {
   int i, j,inabr;
   realtype Delta, Gamma;
@@ -736,6 +736,7 @@ void f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
     DY[i+3*MD->NumEle+MD->NumRiv] = DY[i+3*MD->NumEle+MD->NumRiv] -MD->FluxRiv[i][7] -MD->FluxRiv[i][8]-MD->FluxRiv[i][9] -MD->FluxRiv[i][10]+MD->FluxRiv[i][6];
     DY[i+3*MD->NumEle+MD->NumRiv] = DY[i+3*MD->NumEle+MD->NumRiv]/(MD->Ele[i+MD->NumEle].Porosity*MD->Riv[i].Length*CS_AreaOrPerem(MD->Riv_Shape[MD->Riv[i].shape - 1].interpOrd,MD->Riv[i].depth,MD->Riv[i].coeff,3)*UNIT_C);
   }
+  return 0;   // everything is okay <= CVODE manual 4.6.1 ODE right-hand sideof
 }
 
 realtype Interpolation(TSD *Data, realtype t)

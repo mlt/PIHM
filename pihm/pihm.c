@@ -54,34 +54,50 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <assert.h>
 
 /* SUNDIAL Header Files */
-#include "sundialstypes.h"   /* realtype, integertype, booleantype defination */
-#include "cvode.h"           /* CVODE header file                             */
-#include "cvspgmr.h"         /* CVSPGMR linear header file                    */
-#include "smalldense.h"      /* use generic DENSE linear solver for "small"   */
-#include "nvector_serial.h"  /* contains the definition of type N_Vector      */
-#include "sundialsmath.h"    /* contains UnitRoundoff, RSqrt, SQR functions   */
-#include "cvdense.h"         /* CVDENSE header file                           */
-#include "dense.h"           /* generic dense solver header file              */
+#include <sundials/sundials_types.h>   /* realtype, integertype, booleantype defination */
+#include <cvode/cvode.h>           /* CVODE header file                             */
+//#include <sundials/sundials_spgmr.h>         /* CVSPGMR linear header file                    */
+#include <cvode/cvode_spgmr.h>
+//#include "smalldense.h"      /* use generic DENSE linear solver for "small"   */
+#include <nvector/nvector_serial.h>  /* contains the definition of type N_Vector      */
+#include <sundials/sundials_math.h>    /* contains UnitRoundoff, RSqrt, SQR functions   */
+#include <sundials/sundials_dense.h>         /* CVDENSE header file                           */
+//#include "dense.h"           /* generic dense solver header file              */
 #include "pihm.h"            /* Data Model and Variable Declarations     */
 #define UNIT_C 1440      /* Unit Conversions */
+#include <windows.h>
+#include <signal.h>
 
 /* Function Declarations */
 void initialize(char *, Model_Data, Control_Data *, N_Vector);
 void is_sm_et(realtype, realtype, Model_Data, N_Vector);
 /* Function to calculate right hand side of ODE systems */
-void f(realtype, N_Vector, N_Vector, void *);
+int f(realtype, N_Vector, N_Vector, void *);
 void read_alloc(char *, Model_Data, Control_Data *);  /* Variable definition */
 void update(realtype, Model_Data);
 void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
+
+void abrt_handler( int i)
+{
+  printf ( "sig_abrt_hand\n");
+  exit ( 1);
+}
+
+void segv_handler( int i)
+{
+  printf ( "segv_hand\n");
+  exit ( 1);
+}
 
 /* Main Function */
 int main(int argc, char *argv[])
 {
   char tmpLName[11],tmpFName[11]; /* rivFlux File names */
-  Model_Data mData;                 /* Model Data                */
-  Control_Data cData;               /* Solver Control Data       */
+  Model_Data mData = NULL;                 /* Model Data                */
+  Control_Data cData = {0};               /* Solver Control Data       */
   N_Vector CV_Y;                    /* State Variables Vector    */
   void *cvode_mem;                  /* Model Data Pointer        */
   int flag;                         /* flag to test return value */
@@ -96,6 +112,9 @@ int main(int argc, char *argv[])
   realtype cputime_r, cputime_s;    /* for duration in realtype  */
   char *filename;
 
+  signal(SIGABRT, &abrt_handler);
+  signal(SIGSEGV, &segv_handler);
+
   /* Project Input Name */
   if(argc!=2)
   {
@@ -109,36 +128,36 @@ int main(int argc, char *argv[])
     }
     else
     {
-      filename = (char *)malloc(15*sizeof(char));
+      assert(filename = (char *)malloc(15*sizeof(char)));
       fscanf(iproj,"%s",filename);
     }
   }
   else
   {
     /* get user specified file name in command line */
-    filename = (char *)malloc(strlen(argv[1])*sizeof(char));
+    assert(filename = (char *)malloc(strlen(argv[1])*sizeof(char)));
     strcpy(filename,argv[1]);
   }
   /* Open Output Files */
-  ofn[0] = (char *)malloc((strlen(filename)+3)*sizeof(char));
+  assert(ofn[0] = (char *)malloc((strlen(filename)+3)*sizeof(char)));
   strcpy(ofn[0], filename);
   Ofile[0]=fopen(strcat(ofn[0], ".GW"),"w");
-  ofn[1] = (char *)malloc((strlen(filename)+5)*sizeof(char));
+  assert(ofn[1] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(ofn[1], filename);
   Ofile[1]=fopen(strcat(ofn[1], ".surf"),"w");
-  ofn[2] = (char *)malloc((strlen(filename)+4)*sizeof(char));
+  assert(ofn[2] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
   strcpy(ofn[2], filename);
   Ofile[2]=fopen(strcat(ofn[2], ".et0"),"w");
-  ofn[3] = (char *)malloc((strlen(filename)+4)*sizeof(char));
+  assert(ofn[3] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
   strcpy(ofn[3], filename);
   Ofile[3]=fopen(strcat(ofn[3], ".et1"),"w");
-  ofn[4] = (char *)malloc((strlen(filename)+4)*sizeof(char));
+  assert(ofn[4] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
   strcpy(ofn[4], filename);
   Ofile[4]=fopen(strcat(ofn[4], ".et2"),"w");
-  ofn[5] = (char *)malloc((strlen(filename)+3)*sizeof(char));
+  assert(ofn[5] = (char *)malloc((strlen(filename)+3)*sizeof(char)));
   strcpy(ofn[5], filename);
   Ofile[5]=fopen(strcat(ofn[5], ".is"),"w");
-  ofn[6] = (char *)malloc((strlen(filename)+5)*sizeof(char));
+  assert(ofn[6] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(ofn[6], filename);
   Ofile[6]=fopen(strcat(ofn[6], ".snow"),"w");
   for(i=0; i<11; i++)
@@ -148,18 +167,19 @@ int main(int argc, char *argv[])
     strcat(tmpFName,tmpLName);
     Ofile[7+i]=fopen(tmpFName,"w");
   }
-  ofn[18] = (char *)malloc((strlen(filename)+6)*sizeof(char));
+  assert(ofn[18] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
   strcpy(ofn[18], filename);
   Ofile[18]=fopen(strcat(ofn[18], ".stage"),"w");
-  ofn[19] = (char *)malloc((strlen(filename)+6)*sizeof(char));
+  assert(ofn[19] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
   strcpy(ofn[19], filename);
   Ofile[19]=fopen(strcat(ofn[19], ".unsat"),"w");
-  ofn[20] = (char *)malloc((strlen(filename)+5)*sizeof(char));
+  assert(ofn[20] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(ofn[20], filename);
   Ofile[20]=fopen(strcat(ofn[20], ".Rech"),"w");
 
   /* allocate memory for model data structure */
-  mData = (Model_Data)malloc(sizeof *mData);
+  assert(mData = (Model_Data)malloc(sizeof(struct model_data_structure)));
+  memset(mData, 0, sizeof(struct model_data_structure));
 
   printf("\n ...  PIHM 2.0 is starting ... \n");
 
@@ -171,12 +191,21 @@ int main(int argc, char *argv[])
       } */
   if(mData->UnsatMode ==2)
   {
+    printf("after read_alloc\n");
+    printf("UnsatMode=%d\n",mData->UnsatMode);
     /* problem size */
     N = 3*mData->NumEle + 2*mData->NumRiv;
-    mData->DummyY=(realtype *)malloc((3*mData->NumEle+2*mData->NumRiv)*sizeof(realtype));
+    printf("N=%d\n",N);
+    printf("Trying to allocate %d bytes\n", (3*mData->NumEle+2*mData->NumRiv)*sizeof(realtype));
+    assert(mData->DummyY=(realtype *)malloc((3*mData->NumEle+2*mData->NumRiv)*sizeof(realtype)));
+    printf("allocated\n");
   }
   /* initial state variable depending on machine*/
+  printf("We want %d variables\n", N);
+  printf("Current process id is %#x\n", GetCurrentProcessId());
+//	  while(1){printf("wait for debugger\n"); Sleep(5000);};
   CV_Y = N_VNew_Serial(N);
+  printf("Hello\n");
 
   /* initialize mode data structure */
   initialize(filename, mData, &cData, CV_Y);
@@ -187,13 +216,29 @@ int main(int argc, char *argv[])
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
   if(cvode_mem == NULL) {printf("CVodeMalloc failed. \n"); return(1);}
 
+#ifdef SUNDIALS_240
+  // as of CVODE 2.6 and sundials 2.4.0 some names changed // mlt
+  flag = CVodeInit(cvode_mem, f, cData.StartTime, CV_Y);  //, CV_SS, );
+  assert(CV_SUCCESS == CVodeSStolerances(cvode_mem, cData.reltol, cData.abstol));
+  flag = CVodeSetUserData(cvode_mem, mData);
+  // set initial time step, otherwise it is estimated
+  flag = CVodeSetInitStep(cvode_mem, cData.InitStep);
+  flag = CVodeSetStabLimDet(cvode_mem,TRUE);
+  flag = CVodeSetMaxStep(cvode_mem,cData.MaxStep);
+  // Call CVSpgmr to specify the linear solver CVSPGMR
+  // without preconditioning and the maximum Krylov dimension maxl
+  flag = CVSpgmr(cvode_mem, PREC_NONE, 0);
+#else
   flag = CVodeSetFdata(cvode_mem, mData);
   flag = CVodeSetInitStep(cvode_mem,cData.InitStep);
   flag = CVodeSetStabLimDet(cvode_mem,TRUE);
   flag = CVodeSetMaxStep(cvode_mem,cData.MaxStep);
   flag = CVodeMalloc(cvode_mem, f, cData.StartTime, CV_Y, CV_SS, cData.reltol, &cData.abstol);
   flag = CVSpgmr(cvode_mem, PREC_NONE, 0);
-  flag = CVSpgmrSetGSType(cvode_mem, MODIFIED_GS);
+//    flag = CVSpgmrSetGSType(cvode_mem, MODIFIED_GS);
+#endif
+  // Set modified Gram-Schmidt orthogonalization
+  flag = CVSpilsSetGSType(cvode_mem, MODIFIED_GS);
 
   /* set start time */
   t = cData.StartTime;

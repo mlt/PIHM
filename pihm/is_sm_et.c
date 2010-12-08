@@ -21,8 +21,8 @@
 #include <math.h>
 #include <string.h>
 
-#include "nvector_serial.h"
-#include "sundialstypes.h"
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_types.h>
 #include "pihm.h"
 
 #define EPSILON 0.05
