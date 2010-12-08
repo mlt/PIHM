@@ -20,14 +20,15 @@ exec_prefix  = ${prefix}
 includedir   = ${prefix}/include
 libdir       = ${exec_prefix}/lib
 
-
+#http://gcc.gnu.org/wiki/Mudflap_Pointer_Debugging
 
 CPP      = cc -E
 CPPFLAGS = 
 CC       = gcc
-CFLAGS   = -Wall -g -O0 -fbounds-check -fno-delete-null-pointer-checks -fexceptions -fnon-call-exceptions -fstack-protector-all
-# -fstack-check
-#-Wl,--stack=268435457,--heap=268435456 
+#CC	= i586-mingw32msvc-gcc
+CFLAGS   = -Wall -fPIE -Wl,-pie -g -O0  -fbounds-check -fno-delete-null-pointer-checks -fexceptions -fnon-call-exceptions
+#-fmudflap -Wl,-wrap=malloc,-wrap=free,-wrap=calloc,-wrap=realloc,-wrap=mmap,-wrap=munmap
+# Windows only: -Wl,--stack=268435457,--heap=268435456
 #-DSUNDIALS_240
 #-fstack-protector-all
 # -fstack-check
@@ -39,6 +40,7 @@ CFLAGS   = -Wall -g -O0 -fbounds-check -fno-delete-null-pointer-checks -fexcepti
 #CFLAGS   = -O3 -mtune=native -fomit-frame-pointer -mfpmath=sse -msse3
 LDFLAGS  = 
 LIBS     = -lm
+#-lmudflap -ldl
 SRC    = pihm.c f.c read_alloc.c initialize.c is_sm_et.c update.c print.c
 OBJS     = $(SRC:%.o=%.c)
 
@@ -47,8 +49,8 @@ LINKER_PREFIX   =
 
 SUNDIALS_INC_DIR = $(includedir)
 SUNDIALS_LIB_DIR = $(libdir)
-SUNDIALS_LIBS    = -static -lsundials_cvode -static -lsundials_nvecserial
-#SUNDIALS_LIBS    = -lsundials_cvode.dll -lsundials_nvecserial.dll
+#SUNDIALS_LIBS    = -static -lsundials_cvode -static -lsundials_nvecserial
+SUNDIALS_LIBS    = -lsundials_cvode -lsundials_nvecserial
 #SUNDIALS_LIBS := $(shell sundials-config -t s -l c -m cvode)
 
 # EXEC_FILES = cvdx cvdxe cvbx cvkx cvkxb cvdemd cvdemk

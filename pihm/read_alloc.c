@@ -56,7 +56,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   /*========== open *.riv file ==========*/
   printf("\n  1) reading %s.riv  ... ", filename);
-  assert(fn[0] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
+  assert(fn[0] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(fn[0], filename);
   riv_file =  fopen(strcat(fn[0], ".riv"), "r");
 
@@ -70,7 +70,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   fscanf(riv_file, "%d", &DS->NumRiv);
 
   assert(DS->Riv = (river_segment *)malloc(DS->NumRiv*sizeof(river_segment)));
-//    assert(DS->Riv_IC = (river_IC *)malloc(DS->NumRiv*sizeof(river_IC)));
+  assert(DS->Riv_IC = (river_IC *)malloc(DS->NumRiv*sizeof(river_IC)));
 
   for (i=0; i<DS->NumRiv; i++)
   {
@@ -136,12 +136,12 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
 
   }
 
-  fclose(riv_file);
+  fclose(riv_file); riv_file = NULL;
   printf("done.\n");
 
   /*========== open *.mesh file ==========*/
   printf("\n  2) reading %s.mesh ... ", filename);
-  assert(fn[1] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
+  assert(fn[1] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
   strcpy(fn[1], filename);
   mesh_file = fopen(strcat(fn[1], ".mesh"), "r");
 
@@ -176,11 +176,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   printf("done.\n");
 
   /* finish reading mesh_files */
-  fclose(mesh_file);
+  fclose(mesh_file); mesh_file = NULL;
 
   /*========== open *.att file ==========*/
   printf("\n  3) reading %s.att  ... ", filename);
-  assert(fn[2] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
+  assert(fn[2] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(fn[2], filename);
   att_file = fopen(strcat(fn[2], ".att"), "r");
 
@@ -211,11 +211,11 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   printf("done.\n");
 
   /* finish reading att_files */
-  fclose(att_file);
+  fclose(att_file); att_file = NULL;
 
   /*========== open *.soil file ==========*/
   printf("\n  4) reading %s.soil ... ", filename);
-  assert(fn[3] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
+  assert(fn[3] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
   strcpy(fn[3], filename);
   soil_file = fopen(strcat(fn[3], ".soil"), "r");
 
@@ -239,12 +239,12 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     fscanf(soil_file, "%lf %lf", &(DS->Soil[i].hAreaF),&(DS->Soil[i].macKsatV));
   }
 
-  fclose(soil_file);
+  fclose(soil_file); soil_file = NULL;
   printf("done.\n");
 
   /*========== open *.geol file ==========*/
   printf("\n  5) reading %s.geol ... ", filename);
-  assert(fn[4] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
+  assert(fn[4] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
   strcpy(fn[4], filename);
   geol_file = fopen(strcat(fn[4], ".geol"), "r");
 
@@ -254,7 +254,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     exit(1);
   }
 
-  /* start reading soil_file */
+  /* start reading geol_file */
   fscanf(geol_file, "%d", &DS->NumGeol);
   assert(DS->Geol = (geol *)malloc(DS->NumGeol*sizeof(geol)));
 
@@ -268,13 +268,13 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     fscanf(geol_file, "%lf %lf %lf", &(DS->Geol[i].vAreaF),&(DS->Geol[i].macKsatH),&(DS->Geol[i].macD));
   }
 
-  fclose(geol_file);
+  fclose(geol_file); geol_file = NULL;
   printf("done.\n");
 
 
   /*========== open *.lc file ==========*/
   printf("\n  6) reading %s.lc ... ", filename);
-  assert(fn[5] = (char *)malloc((strlen(filename)+3)*sizeof(char)));
+  assert(fn[5] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
   strcpy(fn[5], filename);
   lc_file = fopen(strcat(fn[5], ".lc"), "r");
 
@@ -298,13 +298,13 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     fscanf(lc_file, "%lf %lf", &(DS->LandC[i].Rough),&(DS->LandC[i].RzD));
   }
 
-  fclose(lc_file);
+  fclose(lc_file); lc_file = NULL;
   printf("done.\n");
 
 
   /*========== open *.forc file ==========*/
   printf("\n  7) reading %s.forc ... ", filename);
-  assert(fn[6] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
+  assert(fn[6] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
   strcpy(fn[6], filename);
   forc_file = fopen(strcat(fn[6], ".forc"), "r");
 
@@ -535,12 +535,12 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     }
   }
 
-  fclose(forc_file);
+  fclose(forc_file); forc_file = NULL;
   printf("done.\n");
 
   /*========== open *.ibc file ==========*/
   printf("\n  8) reading %s.ibc  ... ", filename);
-  assert(fn[7] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
+  assert(fn[7] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
   strcpy(fn[7], filename);
   ibc_file =  fopen(strcat(fn[7], ".ibc"), "r");
 
@@ -598,12 +598,12 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
       }
     }
   }
-  fclose(ibc_file);
+  fclose(ibc_file); ibc_file = NULL;
   printf("done.\n");
 
   /*========== open *.para file ==========*/
   printf("\n  9) reading %s.para ... ", filename);
-  assert(fn[8] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
+  assert(fn[8] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
   strcpy(fn[8], filename);
   para_file = fopen(strcat(fn[8], ".para"), "r");
 
@@ -678,14 +678,14 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     CS->Tout[CS->NumSteps] = CS->EndTime;
   }
 
-  fclose(para_file);
+  fclose(para_file); para_file = NULL;
   printf("done.\n");
 
   printf("\nStart reading in calibration file...\n");
 
   /*========= open *.calib file ==========*/
   printf("\n  10) reading %s.calib ... ", filename);
-  assert(fn[9] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
+  assert(fn[9] = (char *)malloc((strlen(filename)+7)*sizeof(char)));
   strcpy(fn[9], filename);
   global_calib = fopen(strcat(fn[9], ".calib"), "r");
 

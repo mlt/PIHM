@@ -68,7 +68,7 @@
 //#include "dense.h"           /* generic dense solver header file              */
 #include "pihm.h"            /* Data Model and Variable Declarations     */
 #define UNIT_C 1440      /* Unit Conversions */
-#include <windows.h>
+//#include <windows.h>
 #include <signal.h>
 
 /* Function Declarations */
@@ -96,21 +96,21 @@ void segv_handler( int i)
 int main(int argc, char *argv[])
 {
   char tmpLName[11],tmpFName[11]; /* rivFlux File names */
-  Model_Data mData = NULL;                 /* Model Data                */
+  struct model_data_structure mData = {0};                 /* Model Data                */
   Control_Data cData = {0};               /* Solver Control Data       */
   N_Vector CV_Y;                    /* State Variables Vector    */
-  void *cvode_mem;                  /* Model Data Pointer        */
+  void *cvode_mem = NULL;                  /* Model Data Pointer        */
   int flag;                         /* flag to test return value */
-  FILE *Ofile[22];              /* Output file     */
-  char *ofn[22];
-  FILE *iproj;      /* Project File */
+  FILE *Ofile[22] = {NULL};               /* Output file     */
+  FILE *iproj = NULL;     /* Project File */
   int N;                            /* Problem size              */
   int i,j,k;                        /* loop index                */
   realtype t;           /* simulation time           */
   realtype NextPtr, StepSize;       /* stress period & step size */
   clock_t start, end_r, end_s;      /* system clock at points    */
   realtype cputime_r, cputime_s;    /* for duration in realtype  */
-  char *filename;
+  char *filename = NULL;
+  char buf[1024];
 
   signal(SIGABRT, &abrt_handler);
   signal(SIGSEGV, &segv_handler);
@@ -139,76 +139,63 @@ int main(int argc, char *argv[])
     strcpy(filename,argv[1]);
   }
   /* Open Output Files */
-  assert(ofn[0] = (char *)malloc((strlen(filename)+3)*sizeof(char)));
-  strcpy(ofn[0], filename);
-  Ofile[0]=fopen(strcat(ofn[0], ".GW"),"w");
-  assert(ofn[1] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
-  strcpy(ofn[1], filename);
-  Ofile[1]=fopen(strcat(ofn[1], ".surf"),"w");
-  assert(ofn[2] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
-  strcpy(ofn[2], filename);
-  Ofile[2]=fopen(strcat(ofn[2], ".et0"),"w");
-  assert(ofn[3] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
-  strcpy(ofn[3], filename);
-  Ofile[3]=fopen(strcat(ofn[3], ".et1"),"w");
-  assert(ofn[4] = (char *)malloc((strlen(filename)+4)*sizeof(char)));
-  strcpy(ofn[4], filename);
-  Ofile[4]=fopen(strcat(ofn[4], ".et2"),"w");
-  assert(ofn[5] = (char *)malloc((strlen(filename)+3)*sizeof(char)));
-  strcpy(ofn[5], filename);
-  Ofile[5]=fopen(strcat(ofn[5], ".is"),"w");
-  assert(ofn[6] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
-  strcpy(ofn[6], filename);
-  Ofile[6]=fopen(strcat(ofn[6], ".snow"),"w");
+  sprintf(buf,"%s.GW", filename);
+  Ofile[0]=fopen(buf, "w");
+  sprintf(buf,"%s.surf", filename);
+  Ofile[1]=fopen(buf,"w");
+  sprintf(buf, "%s.et0", filename);
+  Ofile[2] = fopen(buf, "w");
+  sprintf(buf, "%s.et1", filename);
+  Ofile[3]=fopen(buf, "w");
+  sprintf(buf, "%s.et2", filename);
+  Ofile[4]=fopen(buf, "w");
+  sprintf(buf, "%s.is", filename);
+  Ofile[5]=fopen(buf, "w");
+  sprintf(buf, "%s.snow", filename);
+  Ofile[6]=fopen(buf, "w");
   for(i=0; i<11; i++)
   {
-    sprintf(tmpLName,".rivFlx%d",i);
-    strcpy(tmpFName,filename);
-    strcat(tmpFName,tmpLName);
-    Ofile[7+i]=fopen(tmpFName,"w");
+    sprintf(buf, "%s.rivFlx%d", filename, i);
+    Ofile[7+i]=fopen(buf, "w");
   }
-  assert(ofn[18] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
-  strcpy(ofn[18], filename);
-  Ofile[18]=fopen(strcat(ofn[18], ".stage"),"w");
-  assert(ofn[19] = (char *)malloc((strlen(filename)+6)*sizeof(char)));
-  strcpy(ofn[19], filename);
-  Ofile[19]=fopen(strcat(ofn[19], ".unsat"),"w");
-  assert(ofn[20] = (char *)malloc((strlen(filename)+5)*sizeof(char)));
-  strcpy(ofn[20], filename);
-  Ofile[20]=fopen(strcat(ofn[20], ".Rech"),"w");
+  sprintf(buf, "%s.stage", filename);
+  Ofile[18]=fopen(buf, "w");
+  sprintf(buf, "%s.unsat", filename);
+  Ofile[19]=fopen(buf, "w");
+  sprintf(buf, "%s.Rech", filename);
+  Ofile[20]=fopen(buf, "w");
 
   /* allocate memory for model data structure */
-  assert(mData = (Model_Data)malloc(sizeof(struct model_data_structure)));
-  memset(mData, 0, sizeof(struct model_data_structure));
+//    assert(mData = (Model_Data)malloc(sizeof *mData));
 
   printf("\n ...  PIHM 2.0 is starting ... \n");
 
   /* read in 9 input files with "filename" as prefix */
-  read_alloc(filename, mData, &cData);
+  read_alloc(filename, &mData, &cData);
 
 /*	if(mData->UnsatMode ==1)
     {
       } */
-  if(mData->UnsatMode ==2)
+  if(mData.UnsatMode ==2)
   {
     printf("after read_alloc\n");
-    printf("UnsatMode=%d\n",mData->UnsatMode);
+    printf("UnsatMode=%d\n",mData.UnsatMode);
     /* problem size */
-    N = 3*mData->NumEle + 2*mData->NumRiv;
+    N = 3*mData.NumEle + 2*mData.NumRiv;
     printf("N=%d\n",N);
-    printf("Trying to allocate %d bytes\n", (3*mData->NumEle+2*mData->NumRiv)*sizeof(realtype));
-    assert(mData->DummyY=(realtype *)malloc((3*mData->NumEle+2*mData->NumRiv)*sizeof(realtype)));
+    printf("Trying to allocate %d bytes\n", (3*mData.NumEle+2*mData.NumRiv)*sizeof(realtype));
+    assert(mData.DummyY=(realtype *)malloc((3*mData.NumEle+2*mData.NumRiv)*sizeof(realtype)));
     printf("allocated\n");
   }
   /* initial state variable depending on machine*/
   printf("We want %d variables\n", N);
-  printf("Current process id is %#x\n", GetCurrentProcessId());
+//	  printf("Current process id is %#x\n", GetCurrentProcessId());
 //	  while(1){printf("wait for debugger\n"); Sleep(5000);};
   CV_Y = N_VNew_Serial(N);
   printf("Hello\n");
 
   /* initialize mode data structure */
-  initialize(filename, mData, &cData, CV_Y);
+  initialize(filename, &mData, &cData, CV_Y);
 
   printf("\nSolving ODE system ... \n");
 
@@ -220,7 +207,7 @@ int main(int argc, char *argv[])
   // as of CVODE 2.6 and sundials 2.4.0 some names changed // mlt
   flag = CVodeInit(cvode_mem, f, cData.StartTime, CV_Y);  //, CV_SS, );
   assert(CV_SUCCESS == CVodeSStolerances(cvode_mem, cData.reltol, cData.abstol));
-  flag = CVodeSetUserData(cvode_mem, mData);
+  flag = CVodeSetUserData(cvode_mem, &mData);
   // set initial time step, otherwise it is estimated
   flag = CVodeSetInitStep(cvode_mem, cData.InitStep);
   flag = CVodeSetStabLimDet(cvode_mem,TRUE);
@@ -229,7 +216,7 @@ int main(int argc, char *argv[])
   // without preconditioning and the maximum Krylov dimension maxl
   flag = CVSpgmr(cvode_mem, PREC_NONE, 0);
 #else
-  flag = CVodeSetFdata(cvode_mem, mData);
+  flag = CVodeSetFdata(cvode_mem, &mData);
   flag = CVodeSetInitStep(cvode_mem,cData.InitStep);
   flag = CVodeSetStabLimDet(cvode_mem,TRUE);
   flag = CVodeSetMaxStep(cvode_mem,cData.MaxStep);
@@ -266,18 +253,18 @@ int main(int argc, char *argv[])
       StepSize = NextPtr - t;
 
       /* calculate Interception Storage */
-      is_sm_et(t, StepSize, mData,CV_Y);
+      is_sm_et(t, StepSize, &mData,CV_Y);
       printf("\n Tsteps = %f ",t);
       flag = CVode(cvode_mem, NextPtr, CV_Y, &t, CV_NORMAL);
-      update(t,mData);
+      update(t,&mData);
     }
-    PrintData(Ofile,&cData,mData, CV_Y,t);
+    PrintData(Ofile,&cData,&mData, CV_Y,t);
   }
   /* Free memory */
   N_VDestroy_Serial(CV_Y);
   /* Free integrator memory */
   CVodeFree(cvode_mem);
-  free(mData);
+//    free(mData);
   return 0;
 }
 
