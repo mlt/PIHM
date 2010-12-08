@@ -8,7 +8,7 @@
 #
 # cvode/pihm/Makefile.  
 # -----------------------------------------------------------------
-
+#MUDFLAP=1
 SHELL = /bin/sh
 
 srcdir       = .
@@ -20,23 +20,20 @@ exec_prefix  = ${prefix}
 includedir   = ${prefix}/include
 libdir       = ${exec_prefix}/lib
 
-#http://gcc.gnu.org/wiki/Mudflap_Pointer_Debugging
-
 CPP      = cc -E
 CPPFLAGS = 
 CC       = gcc
 #CC	= i586-mingw32msvc-gcc
-CFLAGS   = -Wall -fPIE -Wl,-pie -g -O0  -fbounds-check -fno-delete-null-pointer-checks -fexceptions -fnon-call-exceptions
+CFLAGS   = -Wall -g -O0 -fbounds-check -fno-delete-null-pointer-checks -fexceptions -fnon-call-exceptions
+ifdef MUDFLAP
+CFLAGS = $(CFLAGS) -fmudflap -fPIE -Wl,-pie,-wrap=malloc,-wrap=free,-wrap=calloc,-wrap=realloc,-wrap=mmap,-wrap=munmap
+endif
 #-DSUNDIALS_240
-#-fmudflap -Wl,-wrap=malloc,-wrap=free,-wrap=calloc,-wrap=realloc,-wrap=mmap,-wrap=munmap
+# http://gcc.gnu.org/wiki/Mudflap_Pointer_Debugging
 # Windows only: -Wl,--stack=268435457,--heap=268435456
 #-DSUNDIALS_240
 #-fstack-protector-all
 # -fstack-check
-#
-#-fmudflap
-#67108864
-#16777216
 # -mtune=native -fomit-frame-pointer -mfpmath=sse -msse3
 #CFLAGS   = -O3 -mtune=native -fomit-frame-pointer -mfpmath=sse -msse3
 LDFLAGS  = 
@@ -50,8 +47,8 @@ LINKER_PREFIX   =
 
 SUNDIALS_INC_DIR = $(includedir)
 SUNDIALS_LIB_DIR = $(libdir)
-SUNDIALS_LIBS    = -static -lsundials_cvode -static -lsundials_nvecserial
-#SUNDIALS_LIBS    = -lsundials_cvode -lsundials_nvecserial
+#SUNDIALS_LIBS    = -static -lsundials_cvode -static -lsundials_nvecserial
+SUNDIALS_LIBS    = -lsundials_cvode -lsundials_nvecserial
 #SUNDIALS_LIBS := $(shell sundials-config -t s -l c -m cvode)
 
 # EXEC_FILES = cvdx cvdxe cvbx cvkx cvkxb cvdemd cvdemk

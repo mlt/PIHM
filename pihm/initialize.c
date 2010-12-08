@@ -249,7 +249,6 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
     }
     /* Correction of BedRck Elev. Is this needed? */
     printf("\n Do you want to correct Bed Rock Elev too (1[y]/0[n])\n");
-//		BoolBR = 1;
     scanf("%d",&BoolBR);
     if(BoolBR==1)
     {

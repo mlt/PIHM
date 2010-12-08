@@ -68,7 +68,6 @@
 //#include "dense.h"           /* generic dense solver header file              */
 #include "pihm.h"            /* Data Model and Variable Declarations     */
 #define UNIT_C 1440      /* Unit Conversions */
-//#include <windows.h>
 #include <signal.h>
 
 /* Function Declarations */
@@ -82,13 +81,13 @@ void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
 
 void abrt_handler( int i)
 {
-  printf ( "sig_abrt_hand\n");
+  printf ( "Caught abort signal\n");
   exit ( 1);
 }
 
 void segv_handler( int i)
 {
-  printf ( "segv_hand\n");
+  printf ( "Caught segmentation violation signal\n");
   exit ( 1);
 }
 
@@ -98,7 +97,7 @@ int main(int argc, char *argv[])
   char tmpLName[11],tmpFName[11]; /* rivFlux File names */
   struct model_data_structure mData = {0};                 /* Model Data                */
   Control_Data cData = {0};               /* Solver Control Data       */
-  N_Vector CV_Y;                    /* State Variables Vector    */
+  N_Vector CV_Y = NULL;                    /* State Variables Vector    */
   void *cvode_mem = NULL;                  /* Model Data Pointer        */
   int flag;                         /* flag to test return value */
   FILE *Ofile[22] = {NULL};               /* Output file     */
@@ -178,21 +177,12 @@ int main(int argc, char *argv[])
       } */
   if(mData.UnsatMode ==2)
   {
-    printf("after read_alloc\n");
-    printf("UnsatMode=%d\n",mData.UnsatMode);
     /* problem size */
     N = 3*mData.NumEle + 2*mData.NumRiv;
-    printf("N=%d\n",N);
-    printf("Trying to allocate %d bytes\n", (3*mData.NumEle+2*mData.NumRiv)*sizeof(realtype));
-    assert(mData.DummyY=(realtype *)malloc((3*mData.NumEle+2*mData.NumRiv)*sizeof(realtype)));
-    printf("allocated\n");
+    mData.DummyY=(realtype *)malloc((3*mData.NumEle+2*mData.NumRiv)*sizeof(realtype));
   }
   /* initial state variable depending on machine*/
-  printf("We want %d variables\n", N);
-//	  printf("Current process id is %#x\n", GetCurrentProcessId());
-//	  while(1){printf("wait for debugger\n"); Sleep(5000);};
   CV_Y = N_VNew_Serial(N);
-  printf("Hello\n");
 
   /* initialize mode data structure */
   initialize(filename, &mData, &cData, CV_Y);
@@ -264,7 +254,6 @@ int main(int argc, char *argv[])
   N_VDestroy_Serial(CV_Y);
   /* Free integrator memory */
   CVodeFree(cvode_mem);
-//    free(mData);
   return 0;
 }
 
