@@ -27,6 +27,7 @@ CPPFLAGS =
 CC       = gcc
 #CC	= i586-mingw32msvc-gcc
 CFLAGS   = -Wall -fPIE -Wl,-pie -g -O0  -fbounds-check -fno-delete-null-pointer-checks -fexceptions -fnon-call-exceptions
+#-DSUNDIALS_240
 #-fmudflap -Wl,-wrap=malloc,-wrap=free,-wrap=calloc,-wrap=realloc,-wrap=mmap,-wrap=munmap
 # Windows only: -Wl,--stack=268435457,--heap=268435456
 #-DSUNDIALS_240
@@ -49,8 +50,8 @@ LINKER_PREFIX   =
 
 SUNDIALS_INC_DIR = $(includedir)
 SUNDIALS_LIB_DIR = $(libdir)
-#SUNDIALS_LIBS    = -static -lsundials_cvode -static -lsundials_nvecserial
-SUNDIALS_LIBS    = -lsundials_cvode -lsundials_nvecserial
+SUNDIALS_LIBS    = -static -lsundials_cvode -static -lsundials_nvecserial
+#SUNDIALS_LIBS    = -lsundials_cvode -lsundials_nvecserial
 #SUNDIALS_LIBS := $(shell sundials-config -t s -l c -m cvode)
 
 # EXEC_FILES = cvdx cvdxe cvbx cvkx cvkxb cvdemd cvdemk

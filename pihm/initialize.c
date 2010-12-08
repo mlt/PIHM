@@ -43,13 +43,13 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
 
   assert(zmin_cor=(realtype *)malloc(DS->NumEle*sizeof(realtype)));
 
-  printf("\nInitializing data structure ... ");
+  printf("\nInitializing data structure ...\n");
 
   /* allocate memory storage to flux terms */
-  assert(DS->FluxSurf = (realtype **)malloc(DS->NumEle*sizeof(realtype)));
-  assert(DS->FluxSub = (realtype **)malloc(DS->NumEle*sizeof(realtype)));
-  assert(DS->FluxRiv = (realtype **)malloc(DS->NumRiv*sizeof(realtype)));
-  assert(DS->EleET = (realtype **)malloc(DS->NumEle*sizeof(realtype)));
+  assert(DS->FluxSurf = (realtype **)malloc(DS->NumEle*sizeof(realtype*)));
+  assert(DS->FluxSub = (realtype **)malloc(DS->NumEle*sizeof(realtype*)));
+  assert(DS->FluxRiv = (realtype **)malloc(DS->NumRiv*sizeof(realtype*)));
+  assert(DS->EleET = (realtype **)malloc(DS->NumEle*sizeof(realtype*)));
   assert(DS->ElePrep = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
   assert(DS->EleViR = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
   assert(DS->Recharge = (realtype *)malloc(DS->NumEle*sizeof(realtype)));
