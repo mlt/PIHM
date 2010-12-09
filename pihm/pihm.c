@@ -180,6 +180,7 @@ int main(int argc, char *argv[])
     /* problem size */
     N = 3*mData.NumEle + 2*mData.NumRiv;
     mData.DummyY=(realtype *)malloc((3*mData.NumEle+2*mData.NumRiv)*sizeof(realtype));
+    memset(mData.DummyY, 0, N*sizeof(realtype));
   }
   /* initial state variable depending on machine*/
   CV_Y = N_VNew_Serial(N);
