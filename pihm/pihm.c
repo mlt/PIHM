@@ -94,7 +94,7 @@ void segv_handler( int i)
 /* Main Function */
 int main(int argc, char *argv[])
 {
-  char tmpLName[11],tmpFName[11]; /* rivFlux File names */
+//	char tmpLName[11],tmpFName[11];	/* rivFlux File names */
   struct model_data_structure mData = {0};                 /* Model Data                */
   Control_Data cData = {0};               /* Solver Control Data       */
   N_Vector CV_Y = NULL;                    /* State Variables Vector    */
@@ -102,14 +102,14 @@ int main(int argc, char *argv[])
   int flag;                         /* flag to test return value */
   FILE *Ofile[22] = {NULL};               /* Output file     */
   FILE *iproj = NULL;     /* Project File */
-  int N;                            /* Problem size              */
-  int i,j,k;                        /* loop index                */
+  int N = 0;                            /* Problem size              */
+  int i,j;  //,k;                      /* loop index                */
   realtype t;           /* simulation time           */
   realtype NextPtr, StepSize;       /* stress period & step size */
-  clock_t start, end_r, end_s;      /* system clock at points    */
-  realtype cputime_r, cputime_s;    /* for duration in realtype  */
-  char *filename = NULL;
-  char buf[1024];
+//    clock_t start, end_r, end_s;    /* system clock at points    */
+//    realtype cputime_r, cputime_s;  /* for duration in realtype  */
+  char filename[MAX_PATH];
+  char buf[MAX_PATH];
 
   signal(SIGABRT, &abrt_handler);
   signal(SIGSEGV, &segv_handler);
@@ -127,15 +127,13 @@ int main(int argc, char *argv[])
     }
     else
     {
-      assert(filename = (char *)malloc(15*sizeof(char)));
-      fscanf(iproj,"%s",filename);
+      int read = fscanf(iproj,"%s",filename);
     }
   }
   else
   {
     /* get user specified file name in command line */
-    assert(filename = (char *)malloc(strlen(argv[1])*sizeof(char)));
-    strcpy(filename,argv[1]);
+    strncpy(filename,argv[1], MAX_PATH);
   }
   /* Open Output Files */
   sprintf(buf,"%s.GW", filename);
@@ -197,7 +195,8 @@ int main(int argc, char *argv[])
 #ifdef SUNDIALS_240
   // as of CVODE 2.6 and sundials 2.4.0 some names changed // mlt
   flag = CVodeInit(cvode_mem, f, cData.StartTime, CV_Y);  //, CV_SS, );
-  assert(CV_SUCCESS == CVodeSStolerances(cvode_mem, cData.reltol, cData.abstol));
+  flag = CVodeSStolerances(cvode_mem, cData.reltol, cData.abstol);
+  assert(CV_SUCCESS == flag);
   flag = CVodeSetUserData(cvode_mem, &mData);
   // set initial time step, otherwise it is estimated
   flag = CVodeSetInitStep(cvode_mem, cData.InitStep);
@@ -220,7 +219,7 @@ int main(int argc, char *argv[])
 
   /* set start time */
   t = cData.StartTime;
-  start = clock();
+//    start = clock();
 
   /* start solver in loops */
   for(i=0; i<cData.NumSteps; i++)
@@ -255,6 +254,127 @@ int main(int argc, char *argv[])
   N_VDestroy_Serial(CV_Y);
   /* Free integrator memory */
   CVodeFree(cvode_mem);
+
+  free(mData.Riv_IC);
+  for(i=0; i<mData.NumP; i++) {
+    for(j=0; j<mData.TSD_Pressure[i].length; j++)
+      free(mData.TSD_Pressure[i].TS[j]);
+    free(mData.TSD_Pressure[i].TS);
+  }
+  free(mData.TSD_Pressure);
+  for(i=0; i<mData.NumLC; i++) {
+    for(j=0; j<mData.TSD_LAI[i].length; j++)
+      free(mData.TSD_LAI[i].TS[j]);
+    free(mData.TSD_LAI[i].TS);
+    for(j=0; j<mData.TSD_RL[i].length; j++)
+      free(mData.TSD_RL[i].TS[j]);
+    free(mData.TSD_RL[i].TS);
+  }
+  free(mData.TSD_LAI);
+  for(i=0; i<mData.NumRivBC; i++) {
+    for(j=0; j<mData.TSD_Riv[i].length; j++)
+      free(mData.TSD_Riv[i].TS[j]);
+    free(mData.TSD_Riv[i].TS);
+  }
+  free(mData.TSD_Riv);
+  for(i=0; i<mData.NumPrep; i++) {
+    for(j=0; j<mData.TSD_Prep[i].length; j++)
+      free(mData.TSD_Prep[i].TS[j]);
+    free(mData.TSD_Prep[i].TS);
+  }
+  free(mData.TSD_Prep);
+  for(i=0; i<mData.NumTemp; i++) {
+    for(j=0; j<mData.TSD_Temp[i].length; j++)
+      free(mData.TSD_Temp[i].TS[j]);
+    free(mData.TSD_Temp[i].TS);
+  }
+  free(mData.TSD_Temp);
+  for(i=0; i<mData.NumWindVel; i++) {
+    for(j=0; j<mData.TSD_WindVel[i].length; j++)
+      free(mData.TSD_WindVel[i].TS[j]);
+    free(mData.TSD_WindVel[i].TS);
+  }
+  free(mData.TSD_WindVel);
+  for(i=0; i<mData.NumRn; i++) {
+    for(j=0; j<mData.TSD_Rn[i].length; j++)
+      free(mData.TSD_Rn[i].TS[j]);
+    free(mData.TSD_Rn[i].TS);
+  }
+  free(mData.TSD_Rn);
+  for(i=0; i<mData.NumG; i++) {
+    for(j=0; j<mData.TSD_G[i].length; j++)
+      free(mData.TSD_G[i].TS[j]);
+    free(mData.TSD_G[i].TS);
+  }
+  free(mData.TSD_G);
+  free(mData.TSD_RL);
+  for(i=0; i<mData.NumSource; i++) {
+    for(j=0; j<mData.TSD_Source[i].length; j++)
+      free(mData.TSD_Source[i].TS[j]);
+    free(mData.TSD_Source[i].TS);
+  }
+  free(mData.TSD_Source);
+  free(mData.ISFactor);
+  free(mData.windH);
+  free(mData.Riv_Mat);
+  free(mData.Riv_Shape);
+  free(mData.Riv);
+  for(i=0; i<mData.NumMeltF; i++) {
+    for(j=0; j<mData.TSD_MeltF[i].length; j++)
+      free(mData.TSD_MeltF[i].TS[j]);
+    free(mData.TSD_MeltF[i].TS);
+  }
+  free(mData.TSD_MeltF);
+  free(mData.Soil);
+  free(mData.Geol);
+  free(mData.LandC);
+
+  for(i=0; i<mData.NumRiv; i++)
+    free(mData.FluxRiv[i]);
+  free(mData.FluxRiv);
+  free(mData.ElePrep);
+  free(mData.EleViR);
+  free(mData.Recharge);
+  free(mData.EleIS);
+  free(mData.EleISmax);
+  free(mData.EleISsnowmax);
+  free(mData.EleSnow);
+  free(mData.EleSnowGrnd);
+  free(mData.EleSnowCanopy);
+  free(mData.EleTF);
+  free(mData.EleETloss);
+  free(mData.EleNetPrep);
+  for(i=0; i<mData.NumEle; i++) {
+    free(mData.FluxSurf[i]);
+    free(mData.FluxSub[i]);
+    free(mData.EleET[i]);
+  }
+  free(mData.FluxSurf);
+  free(mData.FluxSub);
+  free(mData.EleET);
+  free(mData.Ele);
+  free(mData.Node);
+  for(i=0; i<22; i++)
+    free(mData.PrintVar[i]);
+  for(i=0; i<mData.NumHumidity; i++) {
+    for(j=0; j<mData.TSD_Humidity[i].length; j++)
+      free(mData.TSD_Humidity[i].TS[j]);
+    free(mData.TSD_Humidity[i].TS);
+  }
+  free(mData.TSD_Humidity);
+  free(mData.Ele_IC);
+  if(mData.Num1BC+mData.Num2BC > 0)
+    free(mData.TSD_EleBC);
+  if(mData.Num1BC>0) {
+    for(i=0; i<mData.Num1BC; i++) {
+      for(j=0; j<mData.TSD_EleBC[i].length; j++)
+        free(mData.TSD_EleBC[i].TS[j]);
+      free(mData.TSD_EleBC[i].TS);
+    }
+  }
+  free(mData.DummyY);
+
+  free(cData.Tout);
   return 0;
 }
 

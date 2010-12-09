@@ -36,10 +36,10 @@ realtype Interpolation(TSD *Data, realtype t);
 void is_sm_et(realtype t, realtype stepsize, void *DS,N_Vector VY)
 {
   int i;
-  realtype totEvap;
+//    realtype totEvap;
   realtype Delta, Gamma;
   realtype Rn, G, T, Vel, RH, VP,P,LAI,zero_dh,cnpy_h,rl,r_a;
-  realtype isval=0,etval=0;
+//    realtype isval=0,etval=0;
   realtype fracSnow,snowRate,MeltRateGrnd,MeltRateCanopy,eltRate,MF,Ts=-3.0,Tr=1.0,To=0.0,ret;
 
   Model_Data MD;

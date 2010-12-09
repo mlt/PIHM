@@ -29,6 +29,9 @@
  *--------------------------------------------------------------------------------*
  **********************************************************************************/
 
+#ifndef PIHM_H
+#define PIHM_H
+
 #include <sundials/sundials_types.h>
 #include <nvector/nvector_serial.h>
 
@@ -411,3 +414,8 @@ typedef struct control_data_structure
 void FPrintFinalStats(FILE *, long int iopt[], realtype ropt[]);
 void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
 
+#ifndef MAX_PATH
+#define MAX_PATH FILENAME_MAX
+#endif
+
+#endif // PIHM_H
