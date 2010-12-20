@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
   /* Free memory */
   N_VDestroy_Serial(CV_Y);
   /* Free integrator memory */
-  CVodeFree(cvode_mem);
+  CVodeFree(&cvode_mem);
 
   free(mData.Riv_IC);
   for(i=0; i<mData.NumP; i++) {

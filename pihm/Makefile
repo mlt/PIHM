@@ -39,8 +39,8 @@ endif
 LDFLAGS  = 
 LIBS     = -lm
 #-lmudflap -ldl
-SRC    = pihm.c f.c read_alloc.c initialize.c is_sm_et.c update.c print.c
-OBJS     = $(SRC:%.o=%.c)
+SRC    = pihm.cpp f.cpp read_alloc.cpp initialize.cpp is_sm_et.cpp update.cpp print.cpp
+OBJS     = $(SRC:%.o=%.cpp)
 
 COMPILER_PREFIX = 
 LINKER_PREFIX   = 

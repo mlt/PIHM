@@ -37,7 +37,7 @@
 
 /* Definition of Global Variable Types */
 
-FILE *riv_state_file;
+//FILE *riv_state_file;
 typedef struct element_type /* Data model for a triangular element */
 {
   int index;      /* Element No. */
@@ -416,6 +416,10 @@ void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
 
 #ifndef MAX_PATH
 #define MAX_PATH FILENAME_MAX
+#endif
+
+#ifdef _MSC_VER
+#define snprintf _snprintf
 #endif
 
 #endif // PIHM_H

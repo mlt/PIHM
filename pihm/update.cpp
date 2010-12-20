@@ -28,13 +28,13 @@
 
 realtype Interpolation(TSD *Data, realtype t);
 
-void update(realtype t, void *DS)
+void update(realtype t, model_data_structure *MD)
 {
   int k;
 
-  Model_Data MD;
+//    Model_Data MD;
 
-  MD = (Model_Data)DS;
+//    MD = (Model_Data)DS;
   for(k=0; k<MD->NumPrep; k++)
   {
     while(MD->TSD_Prep[k].iCounter < MD->TSD_Prep[k].length && t/(UNIT_C) > MD->TSD_Prep[k].TS[MD->TSD_Prep[k].iCounter+1][0])

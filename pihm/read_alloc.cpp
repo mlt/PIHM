@@ -38,7 +38,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   int read;
 
   int NumTout;
-  char tempchar[5];
+  char tempchar[6];
   char fn[MAX_PATH];
 
   FILE *mesh_file;    /* Pointer to .mesh file */
