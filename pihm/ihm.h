@@ -2,7 +2,7 @@
  * File        : ihm.h                                                         *
  * Function    : define data structure and grobal variable                     *
  * Programmer  : Yizhong Qu @ Pennsylvania State Univeristy                    *
- * Version     : May, 2004 (1.0)                                               * 
+ * Version     : May, 2004 (1.0)                                               *
  *-----------------------------------------------------------------------------*
  *                                                                             *
  * This is a object oriented model. In this file, all the data structures and  *
@@ -15,7 +15,7 @@
  *                                                                             *
  * For questions or comments, please contact the authors of the reference.     *
  * One who want to use it for other consideration may also contact Dr.Duffy    *
- * at cxd11@psu.edu.                                                           *    
+ * at cxd11@psu.edu.                                                           *
  *******************************************************************************/
 
 #include "sundialstypes.h"
@@ -23,27 +23,27 @@
 
 /* Define Global Type */
 
-typedef struct element_type 
+typedef struct element_type
 {
-  int index;  
+  int index;
   int node[3];        /* anti-clock-wise */
   int nabr[3];        /* neighbor i shares edge i (0: on boundary) */
-    
+
   realtype edge[3];   /* edge i is from node i to node i+1 */
   realtype area;      /* area of element */
-  
+
   realtype x;         /* x of centroid */
   realtype y;         /* y of centroid */
   realtype zmin;      /* z_min of centroid */
   realtype zmax;      /* z_max of centroid */
-  
+
   realtype Ksat;
   realtype Porosity;
   realtype Alpha;
   realtype Beta;
   realtype Sf;
   realtype Rough;
-    
+
   int soil;           /* soil type */
   int LAI;            /* LAI type  */
   int IC;             /* initial condition type */
@@ -56,35 +56,35 @@ typedef struct element_type
   int G;              /* radiation into ground */
   int pressure;       /* pressure type */
   int source;         /* source (well) type */
-  
+
 } element;
 
 typedef struct nodes_type
 {
-  int index; 
-     
+  int index;
+
   realtype x;          /* x coordinate */
   realtype y;          /* y coordinate */
   realtype zmin;       /* z bed rock elevation */
   realtype zmax;       /* z surface elevation  */
-  
+
 } nodes;
 
 typedef struct element_IC_type
 {
   int index;
-  
+
   realtype interception;
   realtype surf;
   realtype unsat;
   realtype sat;
-  
+
 } element_IC;
 
 typedef struct soils_type
 {
   int index;           /* index */
-  
+
   realtype Ksat;       /* saturated soil conductivity */
   realtype SitaS;      /* soil porosity */
   realtype SitaR;      /* soil moisture residual */
@@ -92,27 +92,27 @@ typedef struct soils_type
   realtype Beta;       /* soil curve parameter 2 */
   realtype Sf;         /* surface slope of friction */
   realtype Rough;      /* surface roughness factor  */
-  
+
   int Macropore;       /* 1: macropore; 0: regular soil */
   realtype base;       /* base value */
   realtype gama;       /* amplifier factor */
-  
+
   int Inf;             /* index of infiltration capacity type */
-  
+
 } soils;
 
 typedef struct river_segment_type
 {
   int index;
-  
+
   realtype x;          /* x of river segment */
-  realtype y;  
+  realtype y;
   realtype zmin;       /* bed elevation  */
   realtype zmax;       /* bank elevation */
   realtype depth;      /* max depth */
   realtype Length;
   realtype Rough;
-  
+
   int FromNode;
   int ToNode;
   int down;            /* down stream segment */
@@ -123,16 +123,16 @@ typedef struct river_segment_type
   int IC;              /* IC type */
   int BC;              /* BC type */
   int reservoir;
-  
+
 } river_segment;
 
 typedef struct river_shape_type
 {
-  int index;           
+  int index;
   realtype width;      /* assume rectangular shape */
   realtype depth;      /* depth */
   realtype bed;        /* bed elevation */
-  
+
 } river_shape;
 
 typedef struct river_material_type
@@ -141,14 +141,14 @@ typedef struct river_material_type
   realtype Rough;
   realtype Sf;
   realtype Cwr;
-  
+
 } river_material;
 
 typedef struct river_IC_type
 {
   int index;
   realtype value;
-  
+
 } river_IC;
 
 typedef struct TSD_type
@@ -157,7 +157,7 @@ typedef struct TSD_type
   int index;
   int length;
   realtype **TS;     /* 2D time series data */
-  
+
 } TSD;
 
 typedef struct model_data_structure          /* Model_data definition */
@@ -165,11 +165,11 @@ typedef struct model_data_structure          /* Model_data definition */
   int UnsatMode;               /* Unsat Mode */
   int SurfMode;                /* Surface Overland Mode */
   int RivMode;                 /* River Routing Mode */
-    
+
   int NumEle;                  /* Number of Elements */
   int NumNode;                 /* Number of Nodes    */
   int NumRiv;                  /* Number of Rivere Segments */
-  
+
   int NumPrep;                 /* Number of Precipatation   */
   int NumTemp;                 /* Number of Temperature     */
   int NumHumidity;             /* Number of Humidity        */
@@ -178,26 +178,26 @@ typedef struct model_data_structure          /* Model_data definition */
   int NumG;                    /* Number of Ground Heat     */
   int NumP;                    /* Number of Pressure        */
   int NumSource;               /* Number of Source          */
-  
+
   int NumSoil;                 /* Number of Soils           */
   int NumRes;                  /* Number of Reservoir       */
   int NumInc;                  /* Number of Infiltration Capacity  */
   int NumLAI;                  /* Number of Leaves Area Index Data */
-  
+
   int Num1BC;                  /* Number of Dirichlet BC    */
   int Num2BC;                  /* Number of Numann BC       */
   int NumEleIC;                /* Number of Element Initial Condtion */
-  
+
   int NumRivShape;             /* Number of River Shape     */
   int NumRivMaterial;          /* Number of River Bank Material */
   int NumRivIC;                /* Number of River Initial Condition  */
   int NumRivBC;                /* Number of River Boundary Condition */
-  
+
   element *Ele;                /* Store Element Information  */
   nodes *Node;                 /* Store Node Information     */
   element_IC *Ele_IC;          /* Store Element Initial Condtion */
   soils *Soil;                 /* Store Soil Information     */
-  
+
   river_segment *Riv;          /* Store River Segment Information */
   river_shape *Riv_Shape;      /* Store River Shape Information   */
   river_material *Riv_Mat;     /* Store River Bank Material Information */
@@ -231,43 +231,43 @@ typedef struct model_data_structure          /* Model_data definition */
   realtype *EleISmax;
   realtype *EleETP;
   realtype **EleET;
-  realtype Q; 
-  
+  realtype Q;
+
 } *Model_Data;
 
 typedef struct control_data_structure
 {
   int Verbose;
   int Debug;
-  
+
   int Solver;
   int NumSteps;
-  
+
   int res_out;
   int flux_out;
   int q_out;
   int etis_out;
-  
+
   int int_type;
-  
+
   realtype abstol;
   realtype reltol;
   realtype InitStep;
   realtype MaxStep;
   realtype ETStep;
-  
+
   int GSType, MaxK;
   realtype delt;
-  
+
   realtype StartTime;
   realtype EndTime;
-  
+
   int outtype;
   realtype a;
   realtype b;
-  
-  realtype *Tout;  
-  
+
+  realtype *Tout;
+
 } Control_Data;
 
 
