@@ -15,16 +15,16 @@
  *	accounted for								*
  * f) Incorporation of Interception storage for rainfall as well as snow	*
  ********************************************************************************/
-
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
 #include "nvector_serial.h"
-#include "sundialstypes.h"
+#include "sundials_types.h"
 #include "pihm.h"
-
+using namespace std;
 #define EPSILON 0.05
 #define UNIT_C 1440     /* 60*24 for calculation of yDot in m/min units while forcing is in m/day. */
 #define multF1  1

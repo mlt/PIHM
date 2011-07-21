@@ -20,18 +20,19 @@
  * Please provide relevant references if you use this code in your research work  *
  *--------------------------------------------------------------------------------*
  *********************************************************************************/
-
+#include <QtGlobal>
+#include <QErrorMessage>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
-#include "sundialstypes.h"
+#include "sundials_types.h"
 #include "nvector_serial.h"
 #include "pihm.h"
 
 
-void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
+int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
 {
   int i,j,tmpBool,BoolBR,BoolR=0;
   realtype a_x, a_y, b_x, b_y, c_x, c_y,distX,distY;
@@ -171,8 +172,8 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
     /* Note: Ideally this data should be read from the decomposition itself */
     /* but it is not supported right now in PIHMgis (Bhatt, G and Kumar, M; 2007) */
     DS->Ele[i+DS->NumEle].zmax=DS->Riv[i].zmin;
-    DS->Ele[i+DS->NumEle].zmin=DS->Riv[i].zmax-(0.5*(DS->Ele[DS->Riv[i].LeftEle-1].zmax+DS->Ele[DS->Riv[i].RightEle-1].zmax)-0.5*(DS->Ele[DS->Riv[i].LeftEle-1].zmin+DS->Ele[DS->Riv[i].RightEle-1].zmin));
-//		DS->Ele[i+DS->NumEle].zmin=DS->Riv[i].zmax-40;
+//		DS->Ele[i+DS->NumEle].zmin=DS->Riv[i].zmax-(0.5*(DS->Ele[DS->Riv[i].LeftEle-1].zmax+DS->Ele[DS->Riv[i].RightEle-1].zmax)-0.5*(DS->Ele[DS->Riv[i].LeftEle-1].zmin+DS->Ele[DS->Riv[i].RightEle-1].zmin));
+    DS->Ele[i+DS->NumEle].zmin=DS->Riv[i].zmax-40;
     DS->Ele[i+DS->NumEle].macD=0.5*(DS->Ele[DS->Riv[i].LeftEle-1].macD+DS->Ele[DS->Riv[i].RightEle-1].macD)>DS->Riv[i].depth ? 0.5*(DS->Ele[DS->Riv[i].LeftEle-1].macD+DS->Ele[DS->Riv[i].RightEle-1].macD)-DS->Riv[i].depth : 0;
     DS->Ele[i+DS->NumEle].macKsatH=0.5*(DS->Ele[DS->Riv[i].LeftEle-1].macKsatH+DS->Ele[DS->Riv[i].RightEle-1].macKsatH);
     DS->Ele[i+DS->NumEle].vAreaF=0.5*(DS->Ele[DS->Riv[i].LeftEle-1].vAreaF+DS->Ele[DS->Riv[i].RightEle-1].vAreaF);
@@ -209,9 +210,13 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
       DS->PrintVar[i]=(realtype *)calloc(DS->NumEle,sizeof(realtype));
     }
   }
+  QErrorMessage * tempMsg = new QErrorMessage;
   /* Debugging artifacts in data created due to coarser resolution of model elements */
-  if(CS->Debug==1)
+  if(CS->FillEleSurf==1)
   {
+    printf("\n Filling Surface Sink Elements");
+    qWarning("Filling Surface Sink Element");
+    //??tempMsg->showMessage("Filling Surface Sink Elements");
     for(i=0; i<DS->NumEle; i++)
     {
       /* Correction of Surf Elev (artifacts due to coarse scale discretization). Not needed if there is lake feature.*/
@@ -247,65 +252,71 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
         printf("=(New)%lf  ",DS->Ele[i].zmax);
       }
     }
-    /* Correction of BedRck Elev. Is this needed? */
-    printf("\n Do you want to correct Bed Rock Elev too (1[y]/0[n])");
-    scanf("%d",&BoolBR);
-    if(BoolBR==1)
+  }
+  /* Correction of BedRck Elev. Is this needed? */
+  //printf("\n Do you want to correct Bed Rock Elev too (1[y]/0[n])");
+  //scanf("%d",&BoolBR);
+  //if(BoolBR==1)
+  if(CS->FillEleSub == 1)
+  {
+    printf("\n Filling Subsurface Element Sinks");
+    //??tempMsg->showMessage("Filling Subsurface Sink Elements");
+    for(i=0; i<DS->NumEle; i++)
     {
-      for(i=0; i<DS->NumEle; i++)
+      tmpBool=1;
+      for(j=0; j<3; j++)
       {
-        tmpBool=1;
+        if(DS->Ele[i].nabr[j]>0)
+        {
+          tempvalue1=DS->Ele[i].BC[j]>-4 ? DS->Ele[DS->Ele[i].nabr[j]-1].zmin : DS->Ele[-(DS->Ele[i].BC[j]/4)-1+DS->NumEle].zmin;
+          if(DS->Ele[i].zmin-tempvalue1>=0)
+          {
+            tmpBool=0;
+            break;
+          }
+        }
+      }
+      if(tmpBool==1)
+      {
+        printf("\n Ele %d is sink ",i+1);
+        /* Note: Following correction is being applied for debug==1 case only */
+        printf("\tBfore: %lf Corrected using:",DS->Ele[i].zmin);
+        tempvalue1=10000000;
         for(j=0; j<3; j++)
         {
           if(DS->Ele[i].nabr[j]>0)
           {
-            tempvalue1=DS->Ele[i].BC[j]>-4 ? DS->Ele[DS->Ele[i].nabr[j]-1].zmin : DS->Ele[-(DS->Ele[i].BC[j]/4)-1+DS->NumEle].zmin;
-            if(DS->Ele[i].zmin-tempvalue1>=0)
-            {
-              tmpBool=0;
-              break;
-            }
+            DS->Ele[i].zmin=(DS->Ele[i].BC[j]>-4 ? DS->Ele[DS->Ele[i].nabr[j]-1].zmin : DS->Ele[-(DS->Ele[i].BC[j]/4)-1+DS->NumEle].zmin);
+            tempvalue1=tempvalue1>DS->Ele[i].zmin ? DS->Ele[i].zmin : tempvalue1;
+            printf("(%d)%lf  ",j+1,(DS->Ele[i].BC[j]>-4 ? DS->Ele[DS->Ele[i].nabr[j]-1].zmin : DS->Ele[-(DS->Ele[i].BC[j]/4)-1+DS->NumEle].zmin));
           }
         }
-        if(tmpBool==1)
-        {
-          printf("\n Ele %d is sink ",i+1);
-          /* Note: Following correction is being applied for debug==1 case only */
-          printf("\tBfore: %lf Corrected using:",DS->Ele[i].zmin);
-          tempvalue1=10000000;
-          for(j=0; j<3; j++)
-          {
-            if(DS->Ele[i].nabr[j]>0)
-            {
-              DS->Ele[i].zmin=(DS->Ele[i].BC[j]>-4 ? DS->Ele[DS->Ele[i].nabr[j]-1].zmin : DS->Ele[-(DS->Ele[i].BC[j]/4)-1+DS->NumEle].zmin);
-              tempvalue1=tempvalue1>DS->Ele[i].zmin ? DS->Ele[i].zmin : tempvalue1;
-              printf("(%d)%lf  ",j+1,(DS->Ele[i].BC[j]>-4 ? DS->Ele[DS->Ele[i].nabr[j]-1].zmin : DS->Ele[-(DS->Ele[i].BC[j]/4)-1+DS->NumEle].zmin));
-            }
-          }
-          DS->Ele[i].zmin=tempvalue1;
-          printf("=(New)%lf  ",DS->Ele[i].zmin);
-        }
+        DS->Ele[i].zmin=tempvalue1;
+        printf("=(New)%lf  ",DS->Ele[i].zmin);
       }
-    }
-    getchar();
-    printf("\nHit any key to see more details");
-    for(i=0; i<DS->NumRiv; i++)
-    {
-      if(DS->Riv[i].down>0)
-      {
-        if(DS->Riv[i].zmin<DS->Riv[DS->Riv[i].down-1].zmin)
-        {
-          BoolR=1;
-          printf("\n Riv %d is lower than downstream Riv %d",i+1,DS->Riv[i].down);
-        }
-      }
-    }
-    if(BoolR==1)
-    {
-      printf("\n\tRiver elevation correction needed");
-      getchar();
     }
   }
+  //getchar();
+  //printf("\nHit any key to see more details");
+  for(i=0; i<DS->NumRiv; i++)
+  {
+    if(DS->Riv[i].down>0)
+    {
+      if(DS->Riv[i].zmin<DS->Riv[DS->Riv[i].down-1].zmin)
+      {
+        BoolR=1;
+        printf("\n Riv %d is lower than downstream Riv %d",i+1,DS->Riv[i].down);
+      }
+    }
+  }
+  if(BoolR==1)
+  {
+    printf("\n\tRiver elevation correction needed");
+    qWarning("River elevation correction may be needed");
+    tempMsg->showMessage("Warning: River Elevation Correction may be needed");
+    getchar();
+  }
+  //}
   for(i=0; i<DS->NumEle; i++)
   {
     a_x = DS->Node[DS->Ele[i].node[0]-1].x;
@@ -433,5 +444,6 @@ void initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
     fclose(init_file);
   }
   printf("done.\n");
+  return BoolR;
 }
 

@@ -1,3 +1,5 @@
+#ifndef PIHM_H
+#define PIHM_H
 /**********************************************************************************
  * File        : pihm.h                                                           *
  * Function    : Declaration and Definition of global variables and data structure*
@@ -29,12 +31,16 @@
  *--------------------------------------------------------------------------------*
  **********************************************************************************/
 
-#include "sundialstypes.h"
+#include "sundials_types.h"
 #include "nvector_serial.h"
+#include <stdio.h>
+#include <iostream>
+#include <QtGui/QProgressBar>
+int pihm(int, char **, QProgressBar *, QString, int*);
 
 /* Definition of Global Variable Types */
 
-FILE *riv_state_file;
+/*FILE *riv_state_file;*/
 typedef struct element_type /* Data model for a triangular element */
 {
   int index;      /* Element No. */
@@ -405,9 +411,14 @@ typedef struct control_data_structure
   realtype *Tout;
 
   globalCal Cal;    /* Convert this to pointer for localized calibration */
+
+  int FillEleSurf;
+  int FillEleSub;
 } Control_Data;
 
 
 void FPrintFinalStats(FILE *, long int iopt[], realtype ropt[]);
 void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
 
+
+#endif

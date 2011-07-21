@@ -71,14 +71,14 @@
  *      b) Qu, Y. & C. Duffy, 2007, "A semidiscrete finite volume formulation  *
  *      for multiprocess watershed simulation". Water Resources Research       *
  *******************************************************************************/
-
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
 #include "nvector_serial.h"
-#include "sundialstypes.h"
+#include "sundials_types.h"
 #include "pihm.h"
 #define multF 2
 #define MINpsi  -70
@@ -86,7 +86,7 @@
 #define THRESH 0.0
 #define UNIT_C 1440 /* Note 60*24 for calculation of yDot in m/min units while forcing is in m/day. */
 #define GRAV 9.8*60*60  /* Note the dependence on physical units */
-
+using namespace std;
 realtype Interpolation(TSD *Data, realtype t);
 
 realtype returnVal(realtype rArea, realtype rPerem, realtype eqWid,realtype ap_Bool)
@@ -136,12 +136,12 @@ realtype CS_AreaOrPerem(int rivOrder, realtype rivDepth, realtype rivCoeff, real
   }
 }
 
-OverlandFlow(realtype **flux, int loci, int locj, realtype avg_y, realtype grad_y, realtype avg_sf, realtype crossA, realtype avg_rough)
+void OverlandFlow(realtype **flux, int loci, int locj, realtype avg_y, realtype grad_y, realtype avg_sf, realtype crossA, realtype avg_rough)
 {
   flux[loci][locj] = crossA*pow(avg_y, 2.0/3.0)*grad_y/(sqrt(fabs(avg_sf))*avg_rough);
 //	flux[loci][locj] = (grad_y>0?1:-1)*crossA*pow(avg_y, 2.0/3.0)*sqrt(fabs(grad_y))/(avg_rough);
 }
-OLFeleToriv(realtype eleYtot,realtype EleZ,realtype cwr,realtype rivZmax,realtype rivYtot,realtype **fluxriv,int loci,int locj,realtype length)
+void OLFeleToriv(realtype eleYtot,realtype EleZ,realtype cwr,realtype rivZmax,realtype rivYtot,realtype **fluxriv,int loci,int locj,realtype length)
 {
   realtype threshEle;
   if(rivZmax < EleZ)
@@ -296,7 +296,7 @@ realtype effKH(int mp,realtype tmpY, realtype aqDepth, realtype MacD, realtype M
     return ksatH;
   }
 }
-void f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
+int f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
 {
   int i, j,inabr;
   realtype Delta, Gamma;
@@ -721,6 +721,26 @@ void f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
       DY[i] =  DY[i] - MD->FluxSurf[i][j]/MD->Ele[i].area;
       DY[i+2*MD->NumEle] = DY[i+2*MD->NumEle] - MD->FluxSub[i][j]/MD->Ele[i].area;
     }
+    if(i==716)
+    {
+      DY[i+2*MD->NumEle]=DY[i+2*MD->NumEle]-0.00901;
+    }
+    if(i==663)
+    {
+      DY[i+2*MD->NumEle]=DY[i+2*MD->NumEle]-0.00409;
+    }
+    if(i==937)
+    {
+      DY[i+2*MD->NumEle]=DY[i+2*MD->NumEle]-0.00141;
+    }
+    if(i==761)
+    {
+      DY[i+2*MD->NumEle]=DY[i+2*MD->NumEle]-0.01262;
+    }
+    if(i==122)
+    {
+      DY[i+2*MD->NumEle]=DY[i+2*MD->NumEle]-0.00124;
+    }
     DY[i+MD->NumEle] = DY[i+MD->NumEle]/(MD->Ele[i].Porosity*UNIT_C);
     DY[i+2*MD->NumEle] = DY[i+2*MD->NumEle]/(MD->Ele[i].Porosity*UNIT_C);
     DY[i]=DY[i]/(UNIT_C);
@@ -736,6 +756,7 @@ void f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
     DY[i+3*MD->NumEle+MD->NumRiv] = DY[i+3*MD->NumEle+MD->NumRiv] -MD->FluxRiv[i][7] -MD->FluxRiv[i][8]-MD->FluxRiv[i][9] -MD->FluxRiv[i][10]+MD->FluxRiv[i][6];
     DY[i+3*MD->NumEle+MD->NumRiv] = DY[i+3*MD->NumEle+MD->NumRiv]/(MD->Ele[i+MD->NumEle].Porosity*MD->Riv[i].Length*CS_AreaOrPerem(MD->Riv_Shape[MD->Riv[i].shape - 1].interpOrd,MD->Riv[i].depth,MD->Riv[i].coeff,3)*UNIT_C);
   }
+  return 0;
 }
 
 realtype Interpolation(TSD *Data, realtype t)

@@ -22,10 +22,10 @@
 #include <string.h>
 
 #include "nvector_serial.h"
-#include "sundialstypes.h"
+#include "sundials_types.h"
 #include "pihm.h"
 #include "cvode.h"
-#include "cvdense.h"
+#include "cvode_dense.h"
 /*Temporal average of State vectors */
 void avgResults_NV(FILE *fpin,realtype *tmpVarCal,N_Vector tmpNV,int tmpIntv, int tmpNumObj,realtype tmpt,int tmpInitObj)
 {
@@ -36,7 +36,7 @@ void avgResults_NV(FILE *fpin,realtype *tmpVarCal,N_Vector tmpNV,int tmpIntv, in
   }
   if(((int)tmpt%tmpIntv)==0)
   {
-    fprintf(fpin,"%lf\t",tmpt);
+    //// GOPAL fprintf(fpin,"%lf\t",tmpt);
     for(j=0; j<tmpNumObj; j++)
     {
       fprintf(fpin,"%lf\t",tmpVarCal[j]/tmpIntv);
@@ -99,7 +99,7 @@ void avgResults_MD(FILE *fpin,realtype *tmpVarCal,Model_Data tmpDS,int tmpIntv, 
   }
   if(((int)tmpt%tmpIntv)==0)
   {
-    fprintf(fpin,"%lf\t",tmpt);
+    //// GOPAL fprintf(fpin,"%lf\t",tmpt);
     for(j=0; j<tmpNumObj; j++)
     {
       fprintf(fpin,"%lf\t",tmpVarCal[j]/tmpIntv);
@@ -115,7 +115,7 @@ void PrintData(FILE **outp,Control_Data *cD, Model_Data DS, N_Vector CV_Y, realt
   int k;
   if(cD->gwD==1)
   {
-    avgResults_NV(outp[0],DS->PrintVar[0],CV_Y,cD->gwDInt,DS->NumEle+DS->NumRiv,t,2*DS->NumEle);
+    avgResults_NV(outp[0],DS->PrintVar[0],CV_Y,cD->gwDInt,DS->NumEle,t,2*DS->NumEle);
   }
   if(cD->surfD==1)
   {

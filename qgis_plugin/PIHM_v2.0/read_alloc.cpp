@@ -27,7 +27,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "sundialstypes.h"
+#include "sundials_types.h"
 #include "pihm.h"
 
 
@@ -352,6 +352,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_Prep[i].TS[j][0], &DS->TSD_Prep[i].TS[j][1]);
     }
+    DS->TSD_Prep[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumTemp; i++)
@@ -369,6 +370,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_Temp[i].TS[j][0], &DS->TSD_Temp[i].TS[j][1]);
     }
+    DS->TSD_Temp[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumHumidity; i++)
@@ -386,6 +388,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_Humidity[i].TS[j][0], &DS->TSD_Humidity[i].TS[j][1]);
     }
+    DS->TSD_Humidity[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumWindVel; i++)
@@ -402,6 +405,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_WindVel[i].TS[j][0], &DS->TSD_WindVel[i].TS[j][1]);
     }
+    DS->TSD_WindVel[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumRn; i++)
@@ -419,6 +423,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_Rn[i].TS[j][0], &DS->TSD_Rn[i].TS[j][1]);
     }
+    DS->TSD_Rn[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumG; i++)
@@ -436,6 +441,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_G[i].TS[j][0], &DS->TSD_G[i].TS[j][1]);
     }
+    DS->TSD_G[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumP; i++)
@@ -453,6 +459,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_Pressure[i].TS[j][0], &DS->TSD_Pressure[i].TS[j][1]);
     }
+    DS->TSD_Pressure[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumLC; i++)
@@ -470,6 +477,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_LAI[i].TS[j][0], &DS->TSD_LAI[i].TS[j][1]);
     }
+    DS->TSD_LAI[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumLC; i++)
@@ -487,6 +495,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_RL[i].TS[j][0], &DS->TSD_RL[i].TS[j][1]);
     }
+    DS->TSD_RL[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumMeltF; i++)
@@ -504,6 +513,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_MeltF[i].TS[j][0], &DS->TSD_MeltF[i].TS[j][1]);
     }
+    DS->TSD_MeltF[i].iCounter=0;
   }
 
   for(i=0; i<DS->NumSource; i++)
@@ -521,6 +531,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
     {
       fscanf(forc_file, "%lf %lf", &DS->TSD_Source[i].TS[j][0], &DS->TSD_Source[i].TS[j][1]);
     }
+    DS->TSD_Source[i].iCounter=0;
   }
 
   fclose(forc_file);
@@ -624,10 +635,10 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   fscanf(para_file, "%lf %lf", &(CS->abstol), &(CS->reltol));
   fscanf(para_file, "%lf %lf %lf", &(CS->InitStep), &(CS->MaxStep), &(CS->ETStep));
   fscanf(para_file, "%lf %lf %d", &(CS->StartTime), &(CS->EndTime), &(CS->outtype));
-  if(CS->outtype == 0)
-  {
-    fscanf(para_file, "%lf %lf", &CS->a, &CS->b);
-  }
+  //if(CS->outtype == 0)
+  //	{
+  fscanf(para_file, "%lf %lf", &CS->a, &CS->b);
+  //	}
 
   if(CS->a != 1.0)
   {
@@ -665,6 +676,7 @@ void read_alloc(char *filename, Model_Data DS, Control_Data *CS)
   {
     CS->Tout[CS->NumSteps] = CS->EndTime;
   }
+  fscanf(para_file, "%d %d", &CS->FillEleSurf, &CS->FillEleSub);
 
   fclose(para_file);
   printf("done.\n");

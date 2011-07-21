@@ -20,8 +20,9 @@
 #include <string.h>
 
 #include "nvector_serial.h"
-#include "sundialstypes.h"
+#include "sundials_types.h"
 #include "pihm.h"
+#include "update.h"
 
 #define EPSILON 0.05
 #define UNIT_C 1440     /* 60*24 for calculation of yDot in m/min units while forcing is in m/day. */

@@ -56,30 +56,39 @@
 #include <time.h>
 
 /* SUNDIAL Header Files */
-#include "sundialstypes.h"   /* realtype, integertype, booleantype defination */
+#include "sundials_types.h"   /* realtype, integertype, booleantype defination */
 #include "cvode.h"           /* CVODE header file                             */
-#include "cvspgmr.h"         /* CVSPGMR linear header file                    */
-#include "smalldense.h"      /* use generic DENSE linear solver for "small"   */
+#include "cvode_spgmr.h"         /* CVSPGMR linear header file                    */
+#include "sundials_smalldense.h"      /* use generic DENSE linear solver for "small"   */
 #include "nvector_serial.h"  /* contains the definition of type N_Vector      */
-#include "sundialsmath.h"    /* contains UnitRoundoff, RSqrt, SQR functions   */
-#include "cvdense.h"         /* CVDENSE header file                           */
-#include "dense.h"           /* generic dense solver header file              */
+#include "sundials_math.h"    /* contains UnitRoundoff, RSqrt, SQR functions   */
+#include "cvode_dense.h"         /* CVDENSE header file                           */
+#include "sundials_dense.h"           /* generic dense solver header file              */
 #include "pihm.h"            /* Data Model and Variable Declarations     */
+#include "is_sm_et.h"
+#include "update.h"
+#include <iostream>
+#include <fstream>
+#include <QtGui/QProgressBar>^M
+#include "progress.h"
+
 #define UNIT_C 1440      /* Unit Conversions */
 
+
+using namespace std;
+
 /* Function Declarations */
-void initialize(char *, Model_Data, Control_Data *, N_Vector);
-void is_sm_et(realtype, realtype, Model_Data, N_Vector);
+int initialize(char *, Model_Data, Control_Data *, N_Vector);
 /* Function to calculate right hand side of ODE systems */
-void f(realtype, N_Vector, N_Vector, void *);
+int f(realtype, N_Vector, N_Vector, void *);
 void read_alloc(char *, Model_Data, Control_Data *);  /* Variable definition */
-void update(realtype, Model_Data);
+
 void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
 
 /* Main Function */
-int main(int argc, char *argv[])
+int pihm(int argc, char **argv, QProgressBar* bar, QString logFileName, int* RunFlag)
 {
-  char tmpLName[11],tmpFName[11]; /* rivFlux File names */
+  char tmpLName[11],tmpFName[400];  /* rivFlux File names */
   Model_Data mData;                 /* Model Data                */
   Control_Data cData;               /* Solver Control Data       */
   N_Vector CV_Y;                    /* State Variables Vector    */
@@ -109,7 +118,6 @@ int main(int argc, char *argv[])
     }
     else
     {
-      filename = (char *)malloc(15*sizeof(char));
       fscanf(iproj,"%s",filename);
     }
   }
@@ -118,11 +126,13 @@ int main(int argc, char *argv[])
     /* get user specified file name in command line */
     filename = (char *)malloc(strlen(argv[1])*sizeof(char));
     strcpy(filename,argv[1]);
+    cout<<filename<<"\n";
   }
   /* Open Output Files */
   ofn[0] = (char *)malloc((strlen(filename)+3)*sizeof(char));
   strcpy(ofn[0], filename);
   Ofile[0]=fopen(strcat(ofn[0], ".GW"),"w");
+  cout<<ofn[0]<<"\n";
   ofn[1] = (char *)malloc((strlen(filename)+5)*sizeof(char));
   strcpy(ofn[1], filename);
   Ofile[1]=fopen(strcat(ofn[1], ".surf"),"w");
@@ -141,13 +151,18 @@ int main(int argc, char *argv[])
   ofn[6] = (char *)malloc((strlen(filename)+5)*sizeof(char));
   strcpy(ofn[6], filename);
   Ofile[6]=fopen(strcat(ofn[6], ".snow"),"w");
+  cout<<ofn[6]<<"\n";
+
   for(i=0; i<11; i++)
   {
-    sprintf(tmpLName,".rivFlx%d",i);
+    sprintf(tmpLName,".rivFlx%d.txt",i);
     strcpy(tmpFName,filename);
+    cout<<tmpFName<<"\n";
     strcat(tmpFName,tmpLName);
+    cout<<tmpFName<<"\n";
     Ofile[7+i]=fopen(tmpFName,"w");
   }
+  cout<<ofn[17]<<"\n";
   ofn[18] = (char *)malloc((strlen(filename)+6)*sizeof(char));
   strcpy(ofn[18], filename);
   Ofile[18]=fopen(strcat(ofn[18], ".stage"),"w");
@@ -179,7 +194,23 @@ int main(int argc, char *argv[])
   CV_Y = N_VNew_Serial(N);
 
   /* initialize mode data structure */
-  initialize(filename, mData, &cData, CV_Y);
+  int BoolR = initialize(filename, mData, &cData, CV_Y);
+  ofstream log;
+  if(cData.FillEleSurf==1) {
+    log.open(qPrintable(logFileName), ios::app);
+    log<<"Filling Surface Sink Elements...<br>";
+    log.close();
+  }
+  if(cData.FillEleSub==1) {
+    log.open(qPrintable(logFileName), ios::app);
+    log<<"Filling Subsurface Sink Elements...<br>";
+    log.close();
+  }
+  if(BoolR==1) {
+    log.open(qPrintable(logFileName), ios::app);
+    log<<"WARNING: River Elevation Correction may be needed...<br>";
+    log.close();
+  }
 
   printf("\nSolving ODE system ... \n");
 
@@ -193,7 +224,7 @@ int main(int argc, char *argv[])
   flag = CVodeSetMaxStep(cvode_mem,cData.MaxStep);
   flag = CVodeMalloc(cvode_mem, f, cData.StartTime, CV_Y, CV_SS, cData.reltol, &cData.abstol);
   flag = CVSpgmr(cvode_mem, PREC_NONE, 0);
-  flag = CVSpgmrSetGSType(cvode_mem, MODIFIED_GS);
+  flag = CVSpilsSetGSType(cvode_mem, MODIFIED_GS);
 
   /* set start time */
   t = cData.StartTime;
@@ -202,6 +233,9 @@ int main(int argc, char *argv[])
   /* start solver in loops */
   for(i=0; i<cData.NumSteps; i++)
   {
+    cout<<"i= "<<i<<" RunFlag= "<<*RunFlag<<"\n";
+    if(*RunFlag == 0)
+      return 0;
     /*	if (cData.Verbose != 1)
             {
               printf("  Running: %-4.1f%% ... ", (100*(i+1)/((realtype) cData.NumSteps)));
@@ -224,14 +258,18 @@ int main(int argc, char *argv[])
       is_sm_et(t, StepSize, mData,CV_Y);
       printf("\n Tsteps = %f ",t);
       flag = CVode(cvode_mem, NextPtr, CV_Y, &t, CV_NORMAL);
-      update(t,mData);
+      if(100.0*(1.0+i)/((realtype) cData.NumSteps) - (int)(100.0*(1.0+i)/((realtype) cData.NumSteps)) == 0) {
+        cout<<100*(i+1)/((realtype) cData.NumSteps)<<"\n";
+        setProgressBar(bar, 100*(i+1)/((realtype) cData.NumSteps));
+      }
+      update(t, mData);
     }
     PrintData(Ofile,&cData,mData, CV_Y,t);
   }
   /* Free memory */
   N_VDestroy_Serial(CV_Y);
   /* Free integrator memory */
-  CVodeFree(cvode_mem);
+  //CVodeFree(cvode_mem);
   free(mData);
   return 0;
 }
