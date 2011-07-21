@@ -1,50 +1,45 @@
-#--------------------------------------------------------------------------------
-# File        : Makefile
-# Programmers : Yizhong Qu @ PENN STATE
-# Version of  : 30 AUG 2004
-#--------------------------------------------------------------------------------
-# Makefile for the PIHM codes.
-# This makefile generates the executables for the PIHM requested.
-# Type 'make' to see usage instructions and list of examples.
-#--------------------------------------------------------------------------------
+# -----------------------------------------------------------------
+# Version: 2.0
+# Date: "Nov, 2007" 
+# -----------------------------------------------------------------
+# Programmer: Mukesh Kumar (muk139@psu.edu)@ PSU
+# -----------------------------------------------------------------
+# Makefile for PIHM 
+#
+# cvode/pihm/Makefile.  
+# -----------------------------------------------------------------
 
 SHELL = /bin/sh
 
-#--------------------------
-# Top of SUNDIALS directory
-#--------------------------
-SUNDIALS_DIR = ../..
+srcdir       = .
+builddir     = .
+top_builddir = ../../
+top_builddir = ../../
+prefix       = /home1/muk139/sundials
+exec_prefix  = ${prefix}
+includedir   = ${prefix}/include
+libdir       = ${exec_prefix}/lib
 
-#---------------------
-# Path to header files
-#---------------------
-INC_DIR	= $(SUNDIALS_DIR)/include
 
-#----------------------
-# Path to library files
-#----------------------
-LIB_DIR = $(SUNDIALS_DIR)/lib
 
-#-------------
-# Architecture
-#-------------
-ARCH = `uname -s`.`uname -m`
+CPP      = /usr/bin/cc -E
+CPPFLAGS = 
+CC       = /usr/bin/gcc
+CFLAGS   = -g -O0
+#CFLAGS   = 
+LDFLAGS  = 
+LIBS     = -lm
+SRC    = pihm.c f.c read_alloc.c initialize.c is_sm_et.c update.c print.c
+ 
 
-#======================================================
-# Machine-dependent variables
-#======================================================
+COMPILER_PREFIX = 
+LINKER_PREFIX   = 
 
-#------------------------------
-# C compiler and compiler flags
-#------------------------------
+SUNDIALS_INC_DIR = $(includedir)
+SUNDIALS_LIB_DIR = $(libdir)
+SUNDIALS_LIBS    = -lsundials_cvode -lsundials_nvecserial -lsundials_shared
 
-CC     = gcc
-CFLAGS = -Wall -ffloat-store -I$(INC_DIR) -L$(LIB_DIR)
-SRC    = ihm10.c f.c initialize.c read_alloc.c et_is.c print_functions.c 
-
-#======================================================
-# Make rules
-#======================================================
+# EXEC_FILES = cvdx cvdxe cvbx cvkx cvkxb cvdemd cvdemk
 
 all:
 	@(echo)
@@ -54,10 +49,9 @@ all:
 
 pihm:
 	@echo '...Compiling PIHM ...'
-	@$(CC) $(CFLAGS) -o pihm $(SRC) -lcvode.$(ARCH) -lshared.$(ARCH) -lnvecserial.$(ARCH) -lm
+	@$(CC) $(CFLAGS) -I$(SUNDIALS_INC_DIR) -L$(SUNDIALS_LIB_DIR) -o $(builddir)/pihm $(SRC) $(SUNDIALS_LIBS) $(LIBS)
 
 clean:
 	@rm -f *.o
 	@rm -f pihm
 
-#---End of makefile---
