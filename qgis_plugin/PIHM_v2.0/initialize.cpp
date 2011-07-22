@@ -27,8 +27,8 @@
 #include <math.h>
 #include <string.h>
 
-#include "sundials_types.h"
-#include "nvector_serial.h"
+#include <sundials/sundials_types.h>
+#include <nvector/nvector_serial.h>
 #include "pihm.h"
 
 

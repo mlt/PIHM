@@ -2,7 +2,6 @@
 #include <QApplication>
 
 #include "runpihm.h"
-#include "../PIHM_v1.5/calib.h"
 
 #include <iomanip>
 #include <fstream>
@@ -10,14 +9,11 @@ using namespace std;
 #include "../MyNewThread.h"
 #include "../pihmLIBS/helpDialog/helpdialog.h"
 #include "../PIHM_v2.0/pihm.h"
-//#include "../PIHM_v1.5/calib.h"
-//#include "../PIHM_v1.5/et_is.h"
 
 #include "../pihmLIBS/fileStruct.h"
 
 runPIHMDlg::runPIHMDlg(QWidget *parent)
 {
-  QPlastiqueStyle::QPlastiqueStyle();
   setupUi(this);
   connect(browseButton, SIGNAL(clicked()), this, SLOT(folderBrowse()));
   connect(runButton, SIGNAL(clicked()), this, SLOT(run()));
@@ -111,8 +107,7 @@ void runPIHMDlg::run()
   nfile[0] = (char * )malloc(400*sizeof(char));
   nfile[1] = (char * )malloc(400*sizeof(char));
   nfile[0] = "2 ";
-  //nfile[1] = (char *)qPrintable(fileID);
-  nfile[1] = (char *) fileID.ascii();
+  nfile[1] = (char *)qPrintable(fileID);
   cout<<nfile[1]<<"\n";
 
   QDir hdir = QDir::home();

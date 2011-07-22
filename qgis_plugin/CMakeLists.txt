@@ -1,3 +1,25 @@
+cmake_minimum_required(VERSION 2.8)
+
+if( WIN32 )
+# Get OSGeo4W with dev packages for QGis, Qt & Qwt. Get VC++ 2008 Express Edition
+# Start command line for VC++ 2008 Express
+# > cd to source code
+# > mkdir build
+# > cd build
+# > "\Program Files\CMake 2.8\bin\cmake.exe" ..
+# > nmake
+# > nmake install
+  set( OSGEO_DIR "C:\\OSGeo4W" )
+	set( ENV{GDAL_ROOT} ${OSGEO_DIR} )
+	set( ENV{QTDIR} ${OSGEO_DIR} )
+	set( SUNDIALS_DIR "C:\\Progra~1\\sundials" )
+	set( CMAKE_INSTALL_PREFIX "${OSGEO_DIR}\\apps\\qgis\\plugins" CACHE PATH "" FORCE )
+endif()
+
+# set( CMAKE_BUILD_TYPE Release FORCE)
+
+project(pihmgisplugin)
+
 ########################################################
 # Files
 
@@ -52,7 +74,6 @@ SET (pihmgis_SRCS
 	pihmLIBS/splitLineAtVertices.h
 	pihmLIBS/mergeFeatures.h
 	VectorProcessing/Dissolve/dissolve.cpp
-	VectorProcessing/PolygonToPolyLine/qrc_polygontopolylinedialog.cpp
 	VectorProcessing/PolygonToPolyLine/polygontopolylinedialog.cpp
 	VectorProcessing/SimplifyLine/simplifylinedialog.cpp
 	VectorProcessing/SplitLine/splitlinedialog.cpp
@@ -195,10 +216,16 @@ SET (pihmgis_MOC_HDRS
 )
 
 
-SET (pihmgis_RCCS  pihmgis.qrc)
+SET (pihmgis_RCCS  pihmgis.qrc
+	VectorProcessing/PolygonToPolyLine/polygontopolylinedialog.qrc
+)
 
 ########################################################
 # Build
+
+find_package(GDAL REQUIRED)
+find_package(Qt4 REQUIRED COMPONENTS Qt3Support QtCore QtGui)
+include(${QT_USE_FILE})
 
 QT4_WRAP_UI (pihmgis_UIS_H  ${pihmgis_UIS})
 
@@ -206,37 +233,42 @@ QT4_WRAP_CPP (pihmgis_MOC_SRCS  ${pihmgis_MOC_HDRS})
 
 QT4_ADD_RESOURCES(pihmgis_RCC_SRCS ${pihmgis_RCCS})
 
+add_definitions( -DGUI_EXPORT= -DCORE_EXPORT= -DSUNDIALS_240=1 )
+
+include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
+
+if( WIN32 )
+	add_definitions( -DNO_TIMER=1 -D_CRT_SECURE_NO_WARNINGS=1 )
+	link_directories(${OSGEO_DIR}\\lib ${OSGEO_DIR}\\apps\\qgis\\lib ${SUNDIALS_DIR}\\lib)
+	include_directories(
+     ${OSGEO_DIR}\\apps\\qgis\\include
+     ${OSGEO_DIR}\\include\\qwt
+     ${OSGEO_DIR}\\include
+     ${SUNDIALS_DIR}\\include
+	)
+endif()
+
 ADD_LIBRARY (pihmgisplugin MODULE ${pihmgis_SRCS} ${pihmgis_MOC_SRCS} ${pihmgis_RCC_SRCS} ${pihmgis_UIS_H})
 
-INCLUDE_DIRECTORIES(
-     ${CMAKE_CURRENT_BINARY_DIR}
-     ../../core ../../core/raster ../../core/renderer ../../core/symbology
-     ../../gui ../../app
-     ..
-	/Users/bhattgopal/dev/sundials/include
-	/Users/bhattgopal/dev/sundials/include/sundials
-	/Users/bhattgopal/dev/sundials/include/cvode
-	/Library/Frameworks/GDAL.framework/Headers
-	/usr/local/qwt-5.2.0/include/
-)
-
-TARGET_LINK_LIBRARIES(pihmgisplugin
-  ${QT_LIBRARIES}
+target_link_libraries(pihmgisplugin
+  ${GDAL_LIBRARY}
   qgis_core
-  qgis_gui
-	-L/Users/bhattgopal/dev/sundials/lib
+  qwt5
+  ${QT_LIBRARIES}
 	sundials_cvode
 	sundials_nvecserial
-	-L/usr/local/qwt-5.2.0/lib
-	qwt	
-	#lgdal
 )
 
+#  -static-libgcc
+#  -L/C/OSGeo4W/lib
+#	-L/usr/local/lib
 
 ########################################################
 # Install
 
-INSTALL(TARGETS pihmgisplugin
-  RUNTIME DESTINATION ${QGIS_PLUGIN_DIR}
-  LIBRARY DESTINATION ${QGIS_PLUGIN_DIR})
+install(TARGETS pihmgisplugin LIBRARY DESTINATION ".")
+
+#INSTALL(TARGETS pihmgisplugin
+#  RUNTIME DESTINATION ${QGIS_PLUGIN_DIR}
+#  LIBRARY DESTINATION ${QGIS_PLUGIN_DIR})
 

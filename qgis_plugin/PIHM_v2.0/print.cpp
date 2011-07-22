@@ -21,11 +21,11 @@
 #include <math.h>
 #include <string.h>
 
-#include "nvector_serial.h"
-#include "sundials_types.h"
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_types.h>
 #include "pihm.h"
-#include "cvode.h"
-#include "cvode_dense.h"
+#include <cvode/cvode.h>
+#include <cvode/cvode_dense.h>
 /*Temporal average of State vectors */
 void avgResults_NV(FILE *fpin,realtype *tmpVarCal,N_Vector tmpNV,int tmpIntv, int tmpNumObj,realtype tmpt,int tmpInitObj)
 {

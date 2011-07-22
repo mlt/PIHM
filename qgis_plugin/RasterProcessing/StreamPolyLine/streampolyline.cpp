@@ -220,7 +220,7 @@ void StreamPolyLineDlg::run()
       QFileInfo myFileInfo(myFileNameQString);
       QString myBaseNameQString = myFileInfo.baseName();
       QString provider = "OGR";
-      cout<<"\n"<<myFileNameQString.ascii()<<"\n"<<myBaseNameQString.ascii()<<"\n"<<provider.ascii()<<"\n";
+      cout<<"\n"<<qPrintable(myFileNameQString)<<"\n"<<qPrintable(myBaseNameQString)<<"\n"<<qPrintable(provider)<<"\n";
       //getchar(); getchar();
       applicationPointer->addVectorLayer(myFileNameQString, myBaseNameQString, "ogr");
       //QgsRasterLayer *tempLayer = new QgsRasterLayer("/backup/pihm/RasterProcessing/FillPits", "morgedem.asc");

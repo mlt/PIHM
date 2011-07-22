@@ -2,7 +2,6 @@
 #define FILLPITS
 
 #include "ui_fillpits.h"
-#include <qgisapp.h>
 #include <qgisinterface.h>
 class fillpitsDlg : public QDialog, private Ui::FillPits
 {

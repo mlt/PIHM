@@ -156,7 +156,7 @@ void mergeFeaturesDialogDlg::run()
   QString home = dir.homePath();
   QString logFileName(qPrintable(home+"/log.html"));
   ofstream log;
-  log.open(logFileName.ascii());
+  log.open(qPrintable(logFileName));
   log<<"<html><body><font size=3 color=black><p> Verifying Files...</p></font></body></html>";
   log.close();
   messageLog->setSource(logFileName);
@@ -177,7 +177,7 @@ void mergeFeaturesDialogDlg::run()
   //double tol;
   int runFlag = 1;
   if(inputOutputTable->numRows() < 2) {
-    log.open(logFileName.ascii(), ios::app);
+    log.open(qPrintable(logFileName), ios::app);
     log<<"<p><font size=3 color=red> First Please input Files</p>";
     log.close();
     messageLog->reload();
@@ -191,12 +191,12 @@ void mergeFeaturesDialogDlg::run()
       dbfFileName.append("dbf");
 
       ifstream file;
-      file.open(shpFileName.ascii(), ios::in);
-      log.open(logFileName.ascii(), ios::app);
+      file.open(qPrintable(shpFileName), ios::in);
+      log.open(qPrintable(logFileName), ios::app);
 
-      qWarning("\n %s", shpFileName.ascii());
+      qWarning("\n %s", qPrintable(shpFileName));
 
-      log<<"<p>Checking... "<<shpFileName.ascii()<<"... ";
+      log<<"<p>Checking... "<<qPrintable(shpFileName)<<"... ";
       if(file == NULL) {
         log<<"<font size=3 color=red> Error!</p>";
         runFlag = 0;
@@ -205,8 +205,8 @@ void mergeFeaturesDialogDlg::run()
         log<<"Done!</p>";
         shpFileNamesChar[fileCount] = new char[200];
         dbfFileNamesChar[fileCount] = new char[200];
-        shpFileNamesChar[fileCount] = shpFileName.ascii();
-        dbfFileNamesChar[fileCount] = dbfFileName.ascii();
+        shpFileNamesChar[fileCount] = qPrintable(shpFileName);
+        dbfFileNamesChar[fileCount] = qPrintable(dbfFileName);
 
         shpFileNames[fileCount] = shpFileName; //.ascii();
         dbfFileNames[fileCount] = dbfFileName;
@@ -219,16 +219,16 @@ void mergeFeaturesDialogDlg::run()
   }
 
   ofstream out;
-  out.open((outputMergedFileLineEdit->text()).ascii());
+  out.open(qPrintable(outputMergedFileLineEdit->text()));
 
-  log.open(logFileName.ascii(), ios::app);
+  log.open(qPrintable(logFileName), ios::app);
   if((outputMergedFileLineEdit->text()).length()==0) {
     runFlag = 0;
     log<<"<p><font size=3 color=red> Error! Please input Merge Output File</p>";
     qWarning("\nPlease enter output file name");
   }
   else{
-    log<<"<p>Checking... "<<(outputMergedFileLineEdit->text()).ascii()<<"... ";
+    log<<"<p>Checking... "<< qPrintable(outputMergedFileLineEdit->text())<<"... ";
     if(out == NULL) {
       log<<"<font size=3 color=red> Error!</p>";
       //qWarning("\n%s doesn't exist!", (inputFileLineEdit->text()).ascii());
@@ -249,7 +249,7 @@ void mergeFeaturesDialogDlg::run()
     shxFileNameMerge=dbfFileNameMerge;
     dbfFileNameMerge.append("dbf");
 
-    log.open(logFileName.ascii(), ios::app);
+    log.open(qPrintable(logFileName), ios::app);
     log<<"<p>Running...";
     log.close();
     messageLog->reload();
@@ -257,7 +257,7 @@ void mergeFeaturesDialogDlg::run()
 
 
 
-    mergeFeatures(shpFileNamesChar, dbfFileNamesChar, fileCount, shpFileNameMerge.ascii(), dbfFileNameMerge.ascii());
+    mergeFeatures(shpFileNamesChar, dbfFileNamesChar, fileCount, qPrintable(shpFileNameMerge), qPrintable(dbfFileNameMerge));
 
     QString myFileNameQString = shpFileNameMerge;
     QFileInfo myFileInfo(myFileNameQString);
@@ -281,7 +281,7 @@ void mergeFeaturesDialogDlg::run()
 
     writeLineNumber(qPrintable(projFile), 39, qPrintable(shpFile));
 
-    log.open(logFileName.ascii(), ios::app);
+    log.open(qPrintable(logFileName), ios::app);
     log<<" Done!</p>";
     log.close();
     messageLog->reload();

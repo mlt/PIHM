@@ -40,6 +40,7 @@ int catchmentGrid(char *segFile, char *fdrFile, char *catFile){
   //printf("before gridwrite\n");
   err = gridwrite(catFile,(void **)slope,RPFLTDTYPE,nx,ny,dx,dy,bndbox,csize,mval,filetype);
   //printf("before gridwrite\n");
+    return 0;
 }
 
 int trace(float **seg, short int **fdr, float **cat, int i, int j){

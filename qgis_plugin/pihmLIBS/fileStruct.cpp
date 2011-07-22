@@ -100,4 +100,5 @@ int writeLineNumber(const char *fileName, int lineNumber, const char* str){
 
   inData2.close();
   outData2.close();
+  return 0;
 }

@@ -56,22 +56,21 @@
 #include <time.h>
 
 /* SUNDIAL Header Files */
-#include "sundials_types.h"   /* realtype, integertype, booleantype defination */
-#include "cvode.h"           /* CVODE header file                             */
-#include "cvode_spgmr.h"         /* CVSPGMR linear header file                    */
-#include "sundials_smalldense.h"      /* use generic DENSE linear solver for "small"   */
-#include "nvector_serial.h"  /* contains the definition of type N_Vector      */
-#include "sundials_math.h"    /* contains UnitRoundoff, RSqrt, SQR functions   */
-#include "cvode_dense.h"         /* CVDENSE header file                           */
-#include "sundials_dense.h"           /* generic dense solver header file              */
+#include <sundials/sundials_types.h>   /* realtype, integertype, booleantype defination */
+#include <cvode/cvode.h>           /* CVODE header file                             */
+#include <cvode/cvode_spgmr.h>         /* CVSPGMR linear header file                    */
+#include <nvector/nvector_serial.h>  /* contains the definition of type N_Vector      */
+#include <sundials/sundials_math.h>    /* contains UnitRoundoff, RSqrt, SQR functions   */
+#include <sundials/sundials_dense.h>           /* generic dense solver header file              */
 #include "pihm.h"            /* Data Model and Variable Declarations     */
 #include "is_sm_et.h"
 #include "update.h"
 #include <iostream>
 #include <fstream>
 #include <QtGui>
-#include <QtGui/QProgressBar>^M
+#include <QtGui/QProgressBar>
 #include "progress.h"
+#include <assert.h>
 
 #define UNIT_C 1440      /* Unit Conversions */
 
@@ -219,12 +218,28 @@ int pihm(int argc, char **argv, QProgressBar* bar, QString logFileName, int* Run
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
   if(cvode_mem == NULL) {printf("CVodeMalloc failed. \n"); return(1);}
 
-  flag = CVodeSetFdata(cvode_mem, mData);
+#ifdef SUNDIALS_240
+  // as of CVODE 2.6 and sundials 2.4.0 some names changed // mlt
+  flag = CVodeInit(cvode_mem, f, cData.StartTime, CV_Y);  //, CV_SS, );
+  flag = CVodeSStolerances(cvode_mem, cData.reltol, cData.abstol);
+  assert(CV_SUCCESS == flag);
+  flag = CVodeSetUserData(cvode_mem, &mData);
+  // set initial time step, otherwise it is estimated
+  flag = CVodeSetInitStep(cvode_mem, cData.InitStep);
+  flag = CVodeSetStabLimDet(cvode_mem,TRUE);
+  flag = CVodeSetMaxStep(cvode_mem,cData.MaxStep);
+  // Call CVSpgmr to specify the linear solver CVSPGMR
+  // without preconditioning and the maximum Krylov dimension maxl
+  flag = CVSpgmr(cvode_mem, PREC_NONE, 0);
+#else
+  flag = CVodeSetFdata(cvode_mem, &mData);
   flag = CVodeSetInitStep(cvode_mem,cData.InitStep);
   flag = CVodeSetStabLimDet(cvode_mem,TRUE);
   flag = CVodeSetMaxStep(cvode_mem,cData.MaxStep);
   flag = CVodeMalloc(cvode_mem, f, cData.StartTime, CV_Y, CV_SS, cData.reltol, &cData.abstol);
   flag = CVSpgmr(cvode_mem, PREC_NONE, 0);
+#endif
+  // Set modified Gram-Schmidt orthogonalization
   flag = CVSpilsSetGSType(cvode_mem, MODIFIED_GS);
 
   /* set start time */

@@ -41,7 +41,7 @@
 #include <QThread>
 #include "RunPIHM/runpihm.h"
 //QGIS includes
-#include "../qgisplugin.h"
+#include <qgisplugin.h>
 
 //forward declarations
 class QAction;

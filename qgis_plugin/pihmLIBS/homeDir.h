@@ -1,4 +1,6 @@
 #include <qfile.h>
+#include<cstdlib>
+
 QString getHomeDir(){
   std::system("echo $HOME 1>homeDir.dat");
   QFile file("homeDir.dat");

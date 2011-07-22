@@ -27,7 +27,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "sundials_types.h"
+#include <sundials/sundials_types.h>
 #include "pihm.h"
 
 

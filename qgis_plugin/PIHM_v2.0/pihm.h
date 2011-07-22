@@ -31,9 +31,9 @@
  *--------------------------------------------------------------------------------*
  **********************************************************************************/
 
-#include "sundials_types.h"
-#include "nvector_serial.h"
 #include <stdio.h>
+#include <sundials/sundials_types.h>
+#include <nvector/nvector_serial.h>
 #include <iostream>
 #include <QtGui/QProgressBar>
 int pihm(int, char **, QProgressBar *, QString, int*);
@@ -420,5 +420,8 @@ typedef struct control_data_structure
 void FPrintFinalStats(FILE *, long int iopt[], realtype ropt[]);
 void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
 
+#ifndef MAX_PATH
+#define MAX_PATH FILENAME_MAX
+#endif
 
 #endif

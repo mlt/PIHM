@@ -253,6 +253,7 @@ int catchmentPoly(char *catFile, char *nodeFile, char *shpFile, char *dbfFile){
   }
   SHPClose(shp);
   DBFClose(dbf);
+  return 0;
 }
 
 void sortLine(LINE *lines, int numLine){

@@ -77,8 +77,8 @@
 #include <math.h>
 #include <string.h>
 
-#include "nvector_serial.h"
-#include "sundials_types.h"
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_types.h>
 #include "pihm.h"
 #define multF 2
 #define MINpsi  -70
@@ -411,8 +411,8 @@ int f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
     Vel = Interpolation(&MD->TSD_WindVel[MD->Ele[i].WindVel-1], t);
     RH = Interpolation(&MD->TSD_Humidity[MD->Ele[i].humidity-1], t);
     VP = Interpolation(&MD->TSD_Pressure[MD->Ele[i].pressure-1], t);
-    P = 101.325*pow(10,3)*pow((293-0.0065*MD->Ele[i].zmax)/293,5.26);
-    Delta = 2503*pow(10,3)*exp(17.27*T/(T+237.3))/(pow(237.3 + T, 2));
+    P = 101.325*1e3*pow((293-0.0065*MD->Ele[i].zmax)/293,5.26);
+    Delta = 2503*1e3*exp(17.27*T/(T+237.3))/(pow(237.3 + T, 2));
     Gamma = P*1.0035*0.92/(0.622*2441);
     LAI = Interpolation(&MD->TSD_LAI[MD->Ele[i].LC-1], t);
 /*        zero_dh=Interpolation(&MD->TSD_DH[MD->Ele[i].LC-1], t);

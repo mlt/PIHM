@@ -21,8 +21,8 @@
 #include <math.h>
 #include <string.h>
 
-#include "nvector_serial.h"
-#include "sundials_types.h"
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_types.h>
 #include "pihm.h"
 using namespace std;
 #define EPSILON 0.05
@@ -57,7 +57,7 @@ void is_sm_et(realtype t, realtype stepsize, void *DS,N_Vector VY)
     Vel = Interpolation(&MD->TSD_WindVel[MD->Ele[i].WindVel-1], t);
     RH = Interpolation(&MD->TSD_Humidity[MD->Ele[i].humidity-1], t);
     VP = Interpolation(&MD->TSD_Pressure[MD->Ele[i].pressure-1], t);
-    P = 101.325*pow(10,3)*pow((293-0.0065*MD->Ele[i].zmax)/293,5.26);
+    P = 101.325*1e3*pow((293-0.0065*MD->Ele[i].zmax)/293,5.26);
     LAI = Interpolation(&MD->TSD_LAI[MD->Ele[i].LC-1], t);
     MF = multF2*Interpolation(&MD->TSD_MeltF[MD->Ele[i].meltF-1], t);
     /******************************************************************************************/
@@ -102,7 +102,7 @@ void is_sm_et(realtype t, realtype stepsize, void *DS,N_Vector VY)
     /* Note the dependence on physical units */
     if(LAI>0.0)
     {
-      Delta = 2503*pow(10,3)*exp(17.27*T/(T+237.3))/(pow(237.3 + T, 2));
+      Delta = 2503*1e3*exp(17.27*T/(T+237.3))/(pow(237.3 + T, 2));
       Gamma = P*1.0035*0.92/(0.622*2441);
       /*        zero_dh=Interpolation(&MD->TSD_DH[MD->Ele[i].LC-1], t);
               cnpy_h = zero_dh/(1.1*(0.0000001+log(1+pow(0.007*LAI,0.25))));
@@ -117,7 +117,7 @@ void is_sm_et(realtype t, realtype stepsize, void *DS,N_Vector VY)
       */rl=Interpolation(&MD->TSD_RL[MD->Ele[i].LC-1], t);
       r_a = log(MD->Ele[i].windH/rl)*log(10*MD->Ele[i].windH/rl)/(Vel*0.16);
       MD->EleET[i][0] = MD->pcCal.Et0*MD->Ele[i].VegFrac*(LAI/MD->Ele[i].LAImax)*(pow((MD->EleIS[i]<0 ? 0 : MD->EleIS[i])/MD->EleISmax[i],2.0/3.0))*(Rn*(1-MD->Ele[i].Albedo)*Delta+(1.2*1003.5*((VP/RH)-VP)/r_a))/(1000*2441000.0*(Delta+Gamma));
-      MD->EleTF[i]=MD->EleIS[i]<=0 ? 0 : 5.65*pow(10,-2)*MD->EleISmax[i]*exp(3.89*(MD->EleIS[i]<0 ? 0 : MD->EleIS[i])/MD->EleISmax[i]); /* Note the dependece on physical units*/
+      MD->EleTF[i]=MD->EleIS[i]<=0 ? 0 : 5.65*1e-2*MD->EleISmax[i]*exp(3.89*(MD->EleIS[i]<0 ? 0 : MD->EleIS[i])/MD->EleISmax[i]); /* Note the dependece on physical units*/
       MD->EleTF[i]=multF3*MD->EleTF[i];
     }
     else
