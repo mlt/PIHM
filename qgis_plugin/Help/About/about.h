@@ -10,6 +10,9 @@ Q_OBJECT
 public:
 AboutDlg(QWidget *parent = 0);
 
+
+private slots:
+void on_label_11_linkActivated(QString link);
 };
 
 #endif

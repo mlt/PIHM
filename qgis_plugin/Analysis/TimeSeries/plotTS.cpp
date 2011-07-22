@@ -9,7 +9,9 @@
 #include <qdialog.h>
 #include <qcolor.h>
 #include "plotTS.h"
+#include <iostream>
 
+using namespace std;
 /*
 class PlotTS : public QwtPlot
 {
@@ -18,7 +20,7 @@ public:
 };
 */
 
-PlotTS::PlotTS(const char *plotTitle, const char *xTitle, const char *yTitle, const char *legend, double *xVal, double *yVal, int nPts)
+PlotTS::PlotTS(const char *plotTitle, const char *xTitle, const char *yTitle, char **legend, double **xVal, double **yVal, int nPts, int NumTS)
 {
   //qWarning("class\n");
   QColor color(255, 255, 255);
@@ -31,20 +33,32 @@ PlotTS::PlotTS(const char *plotTitle, const char *xTitle, const char *yTitle, co
   setAxisTitle(yLeft, yTitle);
 
   // Insert new curves
-  QwtPlotCurve *cSin = new QwtPlotCurve(legend);
+  QwtPlotCurve **cSin; int* lineColor; QColor* qColor;
+  cSin = (QwtPlotCurve **)malloc(NumTS*sizeof(QwtPlotCurve *));
+  lineColor = (int *)malloc(NumTS*sizeof(int));
+  qColor = (QColor *)malloc(NumTS*sizeof(QColor));
+  for (int i=0; i<NumTS; i++) {
+    cSin[i] = new QwtPlotCurve(legend[i]);
 #if QT_VERSION >= 0x040000
-  cSin->setRenderHint(QwtPlotItem::RenderAntialiased);
+    cSin[i]->setRenderHint(QwtPlotItem::RenderAntialiased);
 #endif
-  cSin->setPen(QPen(Qt::blue));
-  cSin->attach(this);
+    //getchar(); getchar();
+    lineColor[i] = qrand() % 17 + 2;
+    qColor[i] = QColor::fromRgb((int) qrand()%255, (int) qrand()%255, (int) qrand()%255, 255);
 
-  // Create sin and cos data
-  //const int nPoints = 100;
-  //cSin->setData(SimpleData(::sin, nPoints));
-  //cCos->setData(SimpleData(::cos, nPoints));
+    cout << "color = " << lineColor[i] << "\n";
+    //cSin[i]->setPen(QPen(QColor(lineColor[i])));
+    cSin[i]->setPen(QPen(qColor[i]));
+    //cSin[i]->setPen(QPen(qrand() % 17 + 2));
+    cSin[i]->attach(this);
 
-  cSin->setData(xVal, yVal, nPts);
+    // Create sin and cos data
+    //const int nPoints = 100;
+    //cSin->setData(SimpleData(::sin, nPoints));
+    //cCos->setData(SimpleData(::cos, nPoints));
 
+    cSin[i]->setData(xVal[i], yVal[i], nPts);
+  }
   // Insert markers
   /*
    //  ...a horizontal line at y = 0...

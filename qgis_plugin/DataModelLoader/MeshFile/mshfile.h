@@ -18,6 +18,9 @@ void bEleBrowse();
 void mshBrowse();
 void run();
 void help();
+
+private slots:
+void on_rivFileButton_clicked();
 };
 
 #endif

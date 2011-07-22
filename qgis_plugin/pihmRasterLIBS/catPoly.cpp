@@ -194,7 +194,8 @@ int catchmentPoly(char *catFile, char *nodeFile, char *shpFile, char *dbfFile){
     ptz[numPt]=0.0;
     //printf("= %d %lf %lf\n", numPt, ptx[numPt], ptx[numPt]);getchar(); getchar();
     numPt++;
-    if(lineDirFlag == 0) { --numPt; lineDirFlag = 1; }
+    //if(lineDirFlag == 0){ --numPt; lineDirFlag = 1; } //BHATT: Commented this line and edited on next
+    if(lineDirFlag == 0 && numPt>1) { --numPt; lineDirFlag = 1; }
     // search for connection
     count=0;
     for(j=startPivot; j<endPivot; j++) {
