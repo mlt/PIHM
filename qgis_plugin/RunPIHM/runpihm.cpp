@@ -7,11 +7,7 @@
 #include <iomanip>
 #include <fstream>
 using namespace std;
-//#include "../MyNewThread.h"
 #include "../pihmLIBS/helpDialog/helpdialog.h"
-#include "../PIHM_v2.0/pihm.h"
-//#include "../PIHM_v1.5/calib.h"
-//#include "../PIHM_v1.5/et_is.h"
 
 runPIHMDlg::runPIHMDlg(QWidget *parent)
   : rx("Tsteps = ([\\d.,]+)[^\\d.,]"), time(0.)
@@ -101,17 +97,8 @@ void runPIHMDlg::run()
     fileID = lineEdit->text() +"/"+ newFolder + "/" + id;
   else
     fileID = lineEdit->text() + "/" + id;
-  //fileNameID(qPrintable(fileID));
-/*
-  char **nfile;
-        nfile    = (char **)malloc(2*sizeof(char *));
-        nfile[0] = (char * )malloc(400*sizeof(char));
-        nfile[1] = (char * )malloc(400*sizeof(char));
-        nfile[0] = "2 ";
-        //nfile[1] = (char *)qPrintable(fileID);
-  nfile[1] = (char *) fileID.ascii();
-  qDebug(nfile[1]);
-*/
+
+
   QDir hdir = QDir::home();
   QString home = hdir.homePath();
   QString logFileName(home+"/log.html");
@@ -146,13 +133,6 @@ void runPIHMDlg::run()
       paraFile >> start; p->writeEntry("pihm", "start", start); // 111
       paraFile >> finish; p->writeEntry("pihm", "finish", finish); // 112
     }
-//	thread = new MyNewThread(NULL, fileID, logFileName);
-//	thread->init(2, nfile, progressBar, logFileName);
-//	QObject::connect( thread, SIGNAL( Update(int) ), this, SLOT( updateLog(int) ), Qt::QueuedConnection );
-//	QObject::connect( thread, SIGNAL( UpdateProgress(int) ), this, SLOT( UpdateProgress(int) ), Qt::QueuedConnection );
-
-    cout<<"Over to tread Start\n";
-    //      thread->start();
     QString action("pihm %1");
     action = action.arg(fileID);
     textBrowser->setTextFormat(Qt::LogText);
@@ -162,7 +142,7 @@ void runPIHMDlg::run()
   else {
     QString s("Error: Input file(s) missing. Flag = %1");
     textBrowser->append(s.arg(runFlag));
-    cout<<"\nError: Input file(s) missing. Flag = "<<runFlag<<"\n";
+//		cout<<"\nError: Input file(s) missing. Flag = "<<runFlag<<"\n";
   }
 /*
   log.open(qPrintable(logFileName), ios::app);

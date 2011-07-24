@@ -1,0 +1,26 @@
+Windows
+=======
+
+Get OSGeo4W with dev packages for QGis, Qt & Qwt. Get VC++ 2008 Express Edition & CMake
+Start command line for VC++ 2008 Express
+
+> cd to source code
+> mkdir build
+> cd build
+> "\Program Files\CMake 2.8\bin\cmake.exe" ..
+> nmake
+> nmake install
+
+Alternatively (especially for debug)
+
+> mkdir vs2008
+> cd vs2008
+> "\Program Files\CMake 2.8\bin\cmake.exe" -G "Visual Studio 9 2008" ..
+
+
+Debian-flavored GNU/Linux
+=======
+
+Should work for Ubuntu 11.04 with sudo.
+QGis doesn't work with symlinked plugin :( Give a try to QGIS_PLUGINPATH
+# sudo apt-get install libqgis-dev libqwt5-qt4-dev libsundials-serial-dev triangle-bin liblapack-dev libshp-dev

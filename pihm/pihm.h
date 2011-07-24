@@ -35,12 +35,7 @@
 #include <sundials/sundials_types.h>
 #include <nvector/nvector_serial.h>
 #include <iostream>
-#ifdef NOQT
 int pihm(int, char **, const char *);
-#else
-#include <QtGui/QProgressBar>
-int pihm(int, char **, const char *);
-#endif
 
 /* Definition of Global Variable Types */
 

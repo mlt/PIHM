@@ -20,10 +20,6 @@
  * Please provide relevant references if you use this code in your research work  *
  *--------------------------------------------------------------------------------*
  *********************************************************************************/
-#ifndef NOQT
-#include <QtGlobal>
-#include <QErrorMessage>
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -233,17 +229,10 @@ int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
       assert(DS->PrintVar[i]);
     }
   }
-#ifndef NOQT
-  QErrorMessage tempMsg;
-#endif
   /* Debugging artifacts in data created due to coarser resolution of model elements */
   if(CS->FillEleSurf==1)
   {
     printf("\n Filling Surface Sink Elements");
-#ifndef NOQT
-    qWarning("Filling Surface Sink Element");
-    //??tempMsg->showMessage("Filling Surface Sink Elements");
-#endif
     for(i=0; i<DS->NumEle; i++)
     {
       /* Correction of Surf Elev (artifacts due to coarse scale discretization). Not needed if there is lake feature.*/
@@ -339,12 +328,7 @@ int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
   if(BoolR==1)
   {
     printf("\n\tRiver elevation correction needed");
-#ifndef NOQT
-    qWarning("River elevation correction may be needed");
-    tempMsg.showMessage("Warning: River Elevation Correction may be needed");
-#else
     getchar();
-#endif
   }
   //}
   for(i=0; i<DS->NumEle; i++)

@@ -1,60 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 
-add_definitions( -DSUNDIALS_240=1 )
-
 if( WIN32 )
-# Get OSGeo4W with dev packages for QGis, Qt & Qwt. Get VC++ 2008 Express Edition & CMake
-# Start command line for VC++ 2008 Express
-# > cd to source code
-# > mkdir build
-# > cd build
-# > "\Program Files\CMake 2.8\bin\cmake.exe" ..
-# > nmake
-# > nmake install
-# Alternatively (especially for debug)
-# > mkdir vs2008
-# > cd vs2008
-# > "\Program Files\CMake 2.8\bin\cmake.exe" -G "Visual Studio 9 2008" ..
-  set( OSGEO_DIR "C:\\OSGeo4W" )
+	set( OSGEO_DIR "C:\\OSGeo4W" )
 	set( ENV{GDAL_ROOT} ${OSGEO_DIR} )
 	set( ENV{QTDIR} ${OSGEO_DIR} )
-	set( SUNDIALS_DIR "C:\\Progra~1\\sundials" )
-#	set( CMAKE_INSTALL_PREFIX "${OSGEO_DIR}" CACHE PATH "" FORCE )
-	#	set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "apps\\qgis\\plugins" )
-	#	set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin" )
-else() # Should work for Ubuntu 11.04 with sudo. QGis doesn't work with symlinked plugin :( Give a try to QGIS_PLUGINPATH
-# > sudo apt-get install libqgis-dev libqwt5-qt4-dev libsundials-serial-dev triangle-bin liblapack-dev libshp-dev
-	set( CMAKE_INSTALL_PREFIX "/usr/lib/qgis" CACHE PATH "" FORCE )
-	#	set( SUNDIALS_LINUX_EXTRA gslcblas )
-	#	find_package(LAPACK REQUIRED) # broken and requires fortran compiler
-	#	message(${LAPACK_LIBRARIES})
-	set ( SUNDIALS_LINUX_EXTRA lapack )
 endif()
-
-# set( CMAKE_BUILD_TYPE Release FORCE)
-
-project(pihm)
-
-########################################################
-# Files
-
-set( pihm_SRCS
-	#PIHM_v2.0/calib.h
-	#PIHM_v2.0/calib.cpp
-	#PIHM_v2.0/f.h
-	PIHM_v2.0/update.cpp
-	PIHM_v2.0/f.cpp
-	PIHM_v2.0/pihm.h
-	PIHM_v2.0/pihm.cpp
-	#PIHM_v2.0/print_functions.h
-	PIHM_v2.0/print.cpp
-	#PIHM_v2.0/initialize.h
-	PIHM_v2.0/initialize.cpp
-	#PIHM_v2.0/read_alloc.h
-	PIHM_v2.0/read_alloc.cpp
-	#PIHM_v2.0/et_is.h
-	PIHM_v2.0/is_sm_et.cpp
-)
 
 SET (pihmgis_SRCS
 	pihmgis.cpp
@@ -223,9 +173,6 @@ SET (pihmgis_RCCS  pihmgis.qrc
 	VectorProcessing/PolygonToPolyLine/polygontopolylinedialog.qrc
 )
 
-########################################################
-# Build
-
 find_package(GDAL REQUIRED)
 find_package(Qt4 REQUIRED COMPONENTS Qt3Support QtCore QtGui)
 include(${QT_USE_FILE})
@@ -241,19 +188,17 @@ add_definitions( -DGUI_EXPORT= -DCORE_EXPORT= )
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${GDAL_INCLUDE_DIR} )
 
 if( WIN32 )
-	add_definitions( -DNO_TIMER=1 -D_CRT_SECURE_NO_WARNINGS=1 )
-	link_directories(${OSGEO_DIR}\\lib ${OSGEO_DIR}\\apps\\qgis\\lib ${SUNDIALS_DIR}\\lib)
+	add_definitions( -D_CRT_SECURE_NO_WARNINGS=1 )
+	link_directories(${OSGEO_DIR}\\lib ${OSGEO_DIR}\\apps\\qgis\\lib )
 	include_directories(
      ${OSGEO_DIR}\\apps\\qgis\\include
      ${OSGEO_DIR}\\include\\qwt
      ${OSGEO_DIR}\\include
-     ${SUNDIALS_DIR}\\include
 	)
 	set ( QWT_LIB "qwt5" )
 	set ( LIBSHP "shapelib_i" )
 else() # Works for Ubuntu 11.04
 	include_directories( /usr/include/qgis /usr/include/qwt-qt4 )
-	link_directories( /usr/lib/lapack )
 	set ( QWT_LIB "qwt-qt4" )
 	set ( LIBSHP "shp" )
 endif()
@@ -273,88 +218,14 @@ target_link_libraries(pihmgisplugin
 	#	${SUNDIALS_LINUX_EXTRA}
 )
 
-# Standalone
-add_executable(pihm ${pihm_SRCS})
-set_target_properties(pihm
-	PROPERTIES COMPILE_DEFINITIONS NOQT=1
-)
-target_link_libraries(pihm
-	sundials_cvode
-	sundials_nvecserial
-	${SUNDIALS_LINUX_EXTRA}
-)
-
-########################################################
-# Install
-
-
 if( WIN32 )
-#set( CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP true )
-set( CMAKE_INSTALL_DEBUG_LIBRARIES true )
-install(TARGETS pihm pihmgisplugin
-LIBRARY DESTINATION "apps\\qgis\\plugins"
-RUNTIME DESTINATION "bin")
-else()
-install(TARGETS pihm pihmgisplugin
-LIBRARY DESTINATION "lib/qgis/plugins"
-RUNTIME DESTINATION "bin")
+	#set( CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP true )
+	set( CMAKE_INSTALL_DEBUG_LIBRARIES true )
+	install(TARGETS pihmgisplugin
+	LIBRARY DESTINATION "apps\\qgis\\plugins")
+else() # GNU/Linux
+	install(TARGETS pihmgisplugin
+	LIBRARY DESTINATION "lib/qgis/plugins")
 endif()
 
-#INSTALL(TARGETS pihmgisplugin
-#  RUNTIME DESTINATION ${QGIS_PLUGIN_DIR}
-#  LIBRARY DESTINATION ${QGIS_PLUGIN_DIR})
 
-INCLUDE(InstallRequiredSystemLibraries)
-
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "modified PIHM & QGis plug-in")
-SET(CPACK_PACKAGE_VENDOR "mlt")
-SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.txt")
-SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/Copyright.txt")
-SET(CPACK_PACKAGE_VERSION_MAJOR "2")
-SET(CPACK_PACKAGE_VERSION_MINOR "3")
-SET(CPACK_PACKAGE_VERSION_PATCH "1")
-#set( CMAKE_INSTALL_PREFIX "apps\\qgis\\plugins" CACHE PATH "" FORCE )
-#SET(CPACK_SET_DESTDIR ON)
-#SET(CPACK_PACKAGE_INSTALL_DIRECTORY "C:\\\\OSGeo4W\\\\apps\\\\qgis\\\\plugins")
-IF( WIN32 )
-  set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR} )
-  set( CPACK_NSIS_INSTALL_ROOT "C:" )
-  set( CPACK_OUTPUT_FILE_NAME "pihm_mod_2.3.1-qgis_1.7-win32.exe" )
-  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "OSGeo4W")
-  # There is a bug in NSI that does not handle full unix paths properly. Make
-  # sure there is at least one set of four (4) backlasshes.
-#  SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
-#  SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
-  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}")
-  SET(CPACK_NSIS_HELP_LINK "http://www.pihm.psu.edu")
-  SET(CPACK_NSIS_URL_INFO_ABOUT "http://www.pihm.psu.edu")
-#  SET(CPACK_NSIS_MODIFY_PATH ON)
-ELSE()
-	set( CPACK_GENERATOR "DEB" )
-#  SET(CPACK_STRIP_FILES "bin/MyExecutable")
-#  SET(CPACK_SOURCE_STRIP_FILES "")
-ENDIF()
-#SET(CPACK_PACKAGE_EXECUTABLES "MyExecutable" "My Executable")
-
-#set(CPACK_SOURCE_GENERATOR ZIP)
-set(CPACK_SOURCE_IGNORE_FILES
-"~$"
-"\\\\.bak$"
-"\\\\.o$"
-"^\\\\."
-"DS_Store"
-"PIHM_v1.5/"
-"\\\\.svn/"
-"/build/"
-"/vs2008/"
-"\\\\.dbf$"
-"\\\\.shp$"
-"\\\\.shx$"
-"\\\\.pro$"
-"\\\\.app/"
-)
-
-set( CPACK_DEBIAN_PACKAGE_MAINTAINER "Mikhail Titov <mlt@gmx.us>" )
-SET( CPACK_DEBIAN_PACKAGE_DEPENDS "libsundials-cvode1, libsundials-nvecserial0, libqgis1.7.0, libqwt5-qt4, triangle-bin" )
-
-INCLUDE(CPack)

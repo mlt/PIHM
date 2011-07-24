@@ -81,16 +81,6 @@
 #include <sundials/sundials_types.h>
 #include "pihm.h"
 
-#ifndef NOQT
-#include <QtGui>
-#include <QApplication>
-#include <iomanip>
-#include <fstream>
-#include <QDebug>
-#include "../MyNewThread.h"
-extern MyNewThread * thread; // ouch!
-#endif
-
 #define multF 2
 #define MINpsi  -70
 #define EPS 0.05
@@ -598,23 +588,8 @@ int f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
         MD->FluxRiv[i][1] = CrossA*sqrt(GRAV*UNIT_C*UNIT_C*MD->DummyY[i + 3*MD->NumEle]);          /* Note the dependence on physical units */
         break;
       default:
-#ifdef NOQT
         printf("Fatal Error: River Routing Boundary Condition Type Is Wrong!");
         exit(1);
-#else
-        {
-          QDir hdir = QDir::home();
-          QString home = hdir.homePath();
-          QString logFileName(home+"/log.html");
-          std::ofstream log(logFileName, std::ios::app);
-          log << "<p style=\"color:red\">Fatal Error in f.cpp: River Routing Boundary Condition Type Is Wrong!</p>";
-          log << "i=" << i << ", MD->Riv[i].down=" << MD->Riv[i].down << "<br/>";
-          log.close();
-          thread->UpdateLog(0);
-        }
-        qDebug() << __FILE__ << " : Fatal Error: River Routing Boundary Condition Type Is Wrong!";
-        return -1;     // negative value if it failed unrecoverably (in which case the integration is halted and CV_RHSFUNC_FAIL is returned)
-#endif
       }
       /* Note: bdd condition for subsurface element can be changed. Assumption: No flow condition */
       MD->FluxRiv[i][9]=0;

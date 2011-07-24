@@ -68,9 +68,6 @@
 #include "update.h"
 #include <iostream>
 #include <fstream>
-#ifndef NOQT
-#include "../MyNewThread.h"
-#endif
 #include <assert.h>
 
 #define UNIT_C 1440      /* Unit Conversions */
@@ -87,15 +84,8 @@ void read_alloc(char *, Model_Data, Control_Data *);  /* Variable definition */
 void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
 
 /* Main Function */
-#ifdef NOQT
 int main(int argc, char **argv) {
   char logFileName[] = "log.html";
-#else
-extern MyNewThread * thread;
-int pihm(int argc, char **argv, const char * logFileName) {
-  int progress =  0;
-#endif
-
   struct model_data_structure mData = {0};                 /* Model Data                */
   Control_Data cData = {0};               /* Solver Control Data       */
   N_Vector CV_Y = NULL;                    /* State Variables Vector    */
@@ -248,11 +238,6 @@ int pihm(int argc, char **argv, const char * logFileName) {
   /* start solver in loops */
   for(i=0; i<cData.NumSteps && !error; i++)
   {
-    /*	if (cData.Verbose != 1)
-            {
-              printf("  Running: %-4.1f%% ... ", (100*(i+1)/((realtype) cData.NumSteps)));
-              fflush(stdout);
-            } */
     /* inner loops to next output points with ET step size control */
     while(t < cData.Tout[i+1] && !error)
     {
@@ -273,14 +258,6 @@ int pihm(int argc, char **argv, const char * logFileName) {
 //				assert(CV_ROOT_RETURN == flag);
       if (CV_RHSFUNC_FAIL == flag)
         error = true;
-#ifndef NOQT
-      if(100.0*(1.0+i)/((realtype) cData.NumSteps) - (int)(100.0*(1.0+i)/((realtype) cData.NumSteps)) == 0) {
-        ofstream log(logFileName, ios::app);
-        log << t << "<br>";
-        log.close();
-        thread->UpdateLog(100*(i+1)/((realtype) cData.NumSteps));
-      }
-#endif
       update(t,&mData);
     }
     PrintData(Ofile,&cData,&mData, CV_Y,t);
@@ -410,14 +387,6 @@ int pihm(int argc, char **argv, const char * logFileName) {
   free(mData.DummyY);
 
   free(cData.Tout);
-#ifndef NOQT
-  {
-    ofstream log(logFileName, ios::app);
-    log<<"Done!!!<br>";
-    log.close();
-    thread->UpdateLog(100);
-  }
-#endif
   return 0;
 }
 
