@@ -4,7 +4,7 @@
 #include <QString>
 #include <QtGui>
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
 #include "dissolve_h.h"
@@ -15,16 +15,10 @@ Dissolve::Dissolve(QWidget *parent) :
 {
   ui->setupUi(this);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  QString s; s=readLineNumber(qPrintable(projFile), 21);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+  QString s;
+  s = p->readPath(p->readEntry("pihm", "catpoly"));
   ui->lineEditPolygonInput->setText(s);
   s.truncate(s.length()-4); //truncate(s,4);
   s.append("_Dissolve.shp");
@@ -51,14 +45,8 @@ void Dissolve::changeEvent(QEvent *e)
 
 void Dissolve::on_pushButtonInput_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getOpenFileName(this, "Choose Polygon Shape File File", projDir+"/VectorProcessing", "Shape (*.shp *.SHP)");
   ui->lineEditPolygonInput->setText(s);
@@ -70,13 +58,8 @@ void Dissolve::on_pushButtonInput_clicked()
 
 void Dissolve::on_pushButtonOutput_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getSaveFileName(this, "Choose Dissolve File Name", projDir+"/VectorProcessing", "Shape file (*.shp)");
   if(!s.endsWith(".shp"))
@@ -109,17 +92,10 @@ void Dissolve::on_pushButtonRun_clicked()
   ui->textBrowser->setModified(TRUE);
   QApplication::processEvents();
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  writeLineNumber(qPrintable(projFile), 22, qPrintable(ui->lineEditPolygonInput->text()));
-  writeLineNumber(qPrintable(projFile), 23,  qPrintable(ui->lineEditPolygonOutput->text()));
+  QgsProject *p = QgsProject::instance();
+//	QString projDir = p->readEntry("pihm", "projDir");
+  p->writeEntry("pihm", "catpoly", p->writePath(ui->lineEditPolygonInput->text())); // 22
+  p->writeEntry("pihm", "catdiss", p->writePath(ui->lineEditPolygonOutput->text())); // 23
 
   QString inshp, indbf, outshp, outdbf;
   inshp =ui->lineEditPolygonInput->text();

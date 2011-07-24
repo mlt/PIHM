@@ -5,7 +5,7 @@
 #include "../../pihmRasterLIBS/setdir.h"
 #include "../../pihmRasterLIBS/aread8.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <fstream>
 #include <iostream>
@@ -21,28 +21,18 @@ FlowGridDlg::FlowGridDlg(QWidget *parent)
   connect(helpButton, SIGNAL(clicked()), this, SLOT(help()));
   connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-  inputFileLineEdit->setText(readLineNumber(qPrintable(projFile), 4));
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+
+  inputFileLineEdit->setText(p->readPath(p->readEntry("pihm", "fill"))); // 4
   outputFDRFileLineEdit->setText(projDir+"/RasterProcessing/fdr.asc");
   outputFAGFileLineEdit->setText(projDir+"/RasterProcessing/fac.asc");
 }
 
 void FlowGridDlg::inputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/RasterProcessing","DEM/Fill Grid File(*.adf *.asc)");
   inputFileLineEdit->setText(str);
@@ -53,13 +43,8 @@ void FlowGridDlg::inputBrowse()
 
 void FlowGridDlg::outputFDRBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/RasterProcessing","Flow Dir Grid File(*.adf *.asc)");
   QString tmp = temp;
@@ -73,13 +58,8 @@ void FlowGridDlg::outputFDRBrowse()
 
 void FlowGridDlg::outputFAGBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/RasterProcessing","Flow Acc Grid File(*.adf *.asc)");
   QString tmp = temp;
@@ -93,17 +73,12 @@ void FlowGridDlg::outputFAGBrowse()
 
 void FlowGridDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-  writeLineNumber(qPrintable(projFile), 5, qPrintable(inputFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 6, qPrintable(outputFDRFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 7, qPrintable(outputFAGFileLineEdit->text()));
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+
+  p->writeEntry("pihm", "fill", p->writePath(inputFileLineEdit->text())); // 5
+  p->writeEntry("pihm", "fdr", p->writePath(outputFDRFileLineEdit->text())); // 6
+  p->writeEntry("pihm", "fac", p->writePath(outputFAGFileLineEdit->text())); // 7
 
   QDir dir = QDir::home();
   QString home = dir.homePath();

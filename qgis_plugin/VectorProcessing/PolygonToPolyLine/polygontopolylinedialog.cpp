@@ -2,9 +2,9 @@
 #include "polygontopolylinedialog.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 #include "../../pihmLIBS/polygonToPolyline.h"
-#include "../../pihmLIBS/shapefil.h"
+#include <shapefil.h>
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <fstream>
 using namespace std;
@@ -23,16 +23,10 @@ polygonToPolyLineDialogDlg::polygonToPolyLineDialogDlg(QWidget *parent)
   labels << "Input Polygons" << "Output Polylines";
   inputOutputTable->setColumnLabels(labels);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString tempStr; tempStr=readLineNumber(qPrintable(projFile), 23);
+  QString tempStr; tempStr=p->readPath(p->readEntry("pihm", "catdiss")); // 23
   if(tempStr.length()>1) {
     int rows = inputOutputTable->numRows();
     inputOutputTable->insertRows(rows);
@@ -47,24 +41,16 @@ polygonToPolyLineDialogDlg::polygonToPolyLineDialogDlg(QWidget *parent)
 
 void polygonToPolyLineDialogDlg::addBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QStringList temp = QFileDialog::getOpenFileNames(this, "Choose File", projDir+"/VectorProcessing","Internal Bounds File(*.shp *.SHP)");
   QString str = "";
   QString str1 = "";
 
-  unsigned int i;
-
   int rows = inputOutputTable->numRows();
 
-  for(i=0; i< temp.count(); i++)
+  for(int i=0; i< temp.count(); i++)
   {
     //std::cout<<"\n"<<qPrintable(temp[i]);
     str = temp[i];
@@ -108,17 +94,11 @@ void polygonToPolyLineDialogDlg::removeAllBrowse()
 
 void polygonToPolyLineDialogDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  writeLineNumber(qPrintable(projFile), 24, qPrintable(inputOutputTable->text(0,0)));
-  writeLineNumber(qPrintable(projFile), 25, qPrintable(inputOutputTable->text(0,1)));
+  p->writeEntry("pihm", "catdiss", p->writePath(inputOutputTable->text(0,0)));  // 24
+  p->writeEntry("pihm", "catline", p->writePath(inputOutputTable->text(0,1)));  // 25
 
   QDir dir = QDir::home();
   QString home = dir.homePath();

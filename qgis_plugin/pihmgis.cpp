@@ -14,7 +14,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-/*  $Id: plugin.cpp 6935 2007-05-07 14:29:51Z wonder $ */
+/*  $Id: pihmgis.cpp 283 2011-07-18 06:15:42Z mlt $ */
 
 //
 // QGIS Specific includes
@@ -23,9 +23,9 @@
 
 #include <qgisinterface.h>
 #include <qgisgui.h>
+#include <qgsproject.h>
 
 #include "pihmgis.h"
-#include "pihmgisgui.h"
 
 //
 // Qt4 Related Includes
@@ -35,11 +35,11 @@
 #include <QToolBar>
 #include <QThread>
 #include <QDesktopServices>
+#include <QFileDialog>
+#include <QUrl>
+#include <QTextStream>
 
 #include "Project/DefineProject/defineproject.h"
-#include "Project/OpenProject/openproject.h"
-#include "Project/CloseProject/closeproject.h"
-#include "Project/ImportProject/importproject.h"
 
 #include "RasterProcessing/RunAllRaster/runallraster.h"
 #include "RasterProcessing/FillPits/fillpits.h"
@@ -64,7 +64,7 @@
 #include "DataModelLoader/MeshFile/mshfile.h"
 #include "DataModelLoader/AttFile/attfile.h"
 #include "DataModelLoader/RivFile/rivfile.h"
-#include "DataModelLoader/Parafile/parafile.h"
+#include "DataModelLoader/ParaFile/parafile.h"
 #include "DataModelLoader/SoilFile/soilfile.h"
 #include "DataModelLoader/GeolFile/geolfile.h"
 #include "DataModelLoader/LCFile/lcfile.h"
@@ -73,7 +73,6 @@
 #include "DataModelLoader/IbcFile/ibcfile.h"
 
 #include "RunPIHM/runpihm.h"
-//#include "MyNewThread.h"
 #include "Analysis/SpatialPlot/spatialplot.h"
 #include "Analysis/TimeSeries/timeseries.h"
 
@@ -85,7 +84,7 @@
 #define QGISEXTERN extern "C"
 #endif
 
-static const char * const sIdent = "$Id: plugin.cpp 6935 2007-05-07 14:29:51Z wonder $";
+static const char * const sIdent = "$Id: pihmgis.cpp 283 2011-07-18 06:15:42Z mlt $";
 static const QString sName = QObject::tr("PIHMgis");
 static const QString sDescription = QObject::tr("A Tightly Coupled GIS Interface to Penn State Integrated hydrologic Model (PIHM)");
 static const QString sPluginVersion = QObject::tr("Version 0.1");
@@ -119,28 +118,10 @@ PIHMgis::~PIHMgis()
  */
 void PIHMgis::initGui()
 {
-/*
-  // Create the action for tool
-  mQActionPointer = new QAction(QIcon(":/pihmgis/pihmgis.png"),"PIHMgis", this);
-  // Set the what's this text
-  mQActionPointer->setWhatsThis(tr("Replace this with a short description of the what the plugin does"));
-  // Connect the action to the run
-  connect(mQActionPointer, SIGNAL(activated()), this, SLOT(run()));
-  // Add the toolbar
-  mToolBarPointer = new QToolBar(mQGisIface->getMainWindow(), "PIHMgis");
-  mToolBarPointer->setLabel("PIHMgis");
-  // Add the icon to the toolbar
-  mQGisIface->addToolBarIcon(mQActionPointer);
-  mQGisIface->addPluginMenu("&PIHMgis", mQActionPointer);
-*/
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-  QMenu* projMenu = new QMenu("&PIHMgis-Project");
-  projMenu->addAction("New Project", this, SLOT(runDefineProject()));
-  projMenu->addAction("Open Project", this, SLOT(runOpenProject()));
-  projMenu->addAction("Close Project", this, SLOT(runCloseProject()));
-  projMenu->addAction("Import Project", this, SLOT(runImportProject()));
-
-  QAction *projAction = new QAction("PIHMgis Project", this);
+  QAction *projAction = new QAction("&New", this);
+  connect(projAction, SIGNAL(triggered()), this, SLOT(runDefineProject()));
+  QMenu* projMenu = new QMenu("&Import");
+  projMenu->addAction("Import *.pihmgis", this, SLOT(runImportProject()));
   projAction->setMenu(projMenu);
   mQGisIface->addToolBarIcon(projAction);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,11 +192,8 @@ void PIHMgis::initGui()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  QMenu* pihmMenu = new QMenu("&PIHM"); //??, mQGisIface->app());
-  pihmMenu->addAction( "Run PIHM", this, SLOT(runPIHM()));
-  //pihmMenu->addAction( "Run PIHM", this, SLOT(runDoNothing()));
-  QAction *pihmAction = new QAction("      &PIHM      ", this);
-  pihmAction->setMenu(pihmMenu);
+  QAction *pihmAction = new QAction("Run &PIHM...", this);
+  connect(pihmAction, SIGNAL(triggered()), this, SLOT(runPIHM()));
   mQGisIface->addToolBarIcon(pihmAction);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -248,17 +226,6 @@ void PIHMgis::help()
   //implement me!
 }
 
-// Slot called when the menu item is activated
-// If you created more menu items / toolbar buttons in initiGui, you should
-// create a separate handler for each action - this single run() method will
-// not be enough
-void PIHMgis::run()
-{
-  PIHMgisGui *myPluginGui=new PIHMgisGui(mQGisIface->mainWindow(), QgisGui::ModalDialogFlags);
-  myPluginGui->setAttribute(Qt::WA_DeleteOnClose);
-  myPluginGui->show();
-}
-
 // Unload the plugin by cleaning up the GUI
 void PIHMgis::unload()
 {
@@ -275,19 +242,197 @@ void PIHMgis::runDefineProject(){
   Dlg->show();
 }
 
-void PIHMgis::runOpenProject(){
-  OpenProject *Dlg = new OpenProject;
-  Dlg->show();
-}
-
-void PIHMgis::runCloseProject(){
-  CloseProject *Dlg = new CloseProject;
-  Dlg->show();
-}
-
 void PIHMgis::runImportProject(){
-  ImportProject *Dlg = new ImportProject;
-  Dlg->show();
+  QString projFile = QFileDialog::getOpenFileName(NULL, "Choose pihmgis project file to import", QString::null, "PIHM GIS project (*.pihmgis)");
+  if (!projFile.isEmpty()) {
+  typedef enum {Skip, Vector, Raster, Path, String, Int, Double} What;
+  typedef struct {
+    What what;
+    const char* prop;
+  } Action;
+  Action lines[] = {  //{Skip, "/model/mesh" }; // Excel semi-generated
+    {Skip, NULL},   // date
+    { Skip, "projDir"},   // line 2,
+    { Raster, "dem" },   // line 3, source DEM
+    { Raster, "fill" },   // line 4, sink filled DEM
+    { Skip, "fill" },   // line 5,
+    { Raster, "fdr" },   // line 6,
+    { Raster, "fac" },   // line 7,
+    { Skip, "fac" },   // line 8, See 7
+    { Raster, "strgrid" },   // line 9, Streams raster
+    { Int, "facThreshold" },   // line 10, Threshold for stream acc
+    { Skip, "strgrid" },   // line 11, See 9
+    { Skip, "fdr" },   // line 12, See 6
+    { Raster, "lnk" },   // line 13,
+    { Skip, "strgrid" },   // line 14, See 11
+    { Skip, "fdr" },   // line 15, See 6
+    { Vector, "strline" },   // line 16, Streams shapefile
+    { Skip, "lnk" },   // line 17,
+    { Skip, "fdr" },   // line 18,
+    { Raster, "catgrid" },   // line 19,
+    { Skip, "catgrid" },   // line 20,
+    { Vector, "catpoly" },   // line 21,
+    { Skip, "catpoly" },   // line 22, See 21
+    { Vector, "catdiss" },   // line 23,
+    { Skip, "catdiss" },   // line 24, See 23
+    { Vector, "catline" },   // line 25,
+    { Skip, "catline" },   // line 26,
+    { Vector, "catsimple" },   // line 27,
+    { Double, "cattol" },   // line 28, line simplification tolerance for diss polylines?
+    { Vector, "strline" },   // line 29,
+    { Vector, "strsimple" },   // line 30,
+    { Double, "strtol" },   // line 31, line simplification tolerance for streams?
+    { Skip, "catsimple" },   // line 32,
+    { Vector, "catsplit" },   // line 33,
+    { Skip, "strsimple" },   // line 34,
+    { Vector, "strsplit" },   // line 35,
+    { Skip, "catsplit" },   // line 36, See 33
+    { Skip, "strsplit" },   // line 37, See 35
+    { Vector, "merge" },   // line 38,
+    { Skip, "merge" },   // line 39,
+    { Skip, "merge" },   // line 40,
+    { Path, "pslg" },   // line 41, Planar Straight Line Graph
+    { Skip, "pslg" },   // line 42,
+    { Double, "triangle/angle" },   // line 43, triangulation parameter
+    { Double, "triangle/area" },   // line 44, triangulation parameter
+    { String, "triangle/other" },   // line 45, triangulation parameter
+    { Path, "ele" },   // line 46,
+    { Path, "node" },   // line 47,
+    { Vector, "TIN" },   // line 48, TIN/ele shp file
+    { Path, "/model/mesh" },   // line 49,
+    { String, "ID" },   // line 50, file ID
+    { Skip, NULL },   // line 51,
+    { Skip, NULL },   // line 52,
+    { Skip, NULL },   // line 53,
+    { Path, "Precip" },   // line 54,
+    { Path, "Temp" },   // line 55,
+    { Path, "Humid" },   // line 56,
+    { Path, "Wind" },   // line 57,
+    { Path, "G" },   // line 58,
+    { Path, "Rn" },   // line 59,
+    { Path, "P" },   // line 60,
+    { Path, "Soil" },   // line 61,
+    { Path, "Geol" },   // line 62,
+    { Path, "LC" },   // line 63,
+    { Path, "MF" },   // line 64,
+    { Path, "MP" },   // line 65,
+    { Path, "ISIC" },   // line 66,
+    { Path, "SnowIC" },   // line 67,
+    { Path, "OverlandIC" },   // line 68,
+    { Path, "UnSatIC" },   // line 69,
+    { Path, "SatIC" },   // line 70,
+    { Path, "BC" },   // line 71,
+    { Path, "Source" },   // line 72,
+    { Skip, NULL },   // line 73,
+    { Path, "/model/att" },   // line 74,
+    { Skip, "strsplit" },   // line 75, input stream
+    { Skip, "ele" },   // line 76,
+    { Skip, "node" },   // line 77,
+    { Path, "neigh" },   // line 78,
+    { Skip, NULL },   // line 79,
+    { Path, "/model/riv" },   // line 80, .riv file
+    { Path, "rivdec" },   // line 81, For spatial plots
+    { Path, "/model/para" },   // line 82,
+    { Skip, NULL },   // line 83,
+    { Skip, NULL },   // line 84,
+    { Skip, NULL },   // line 85,
+    { Skip, NULL },   // line 86,
+    { Path, "soil" },   // line 87, in
+    { Path, "/model/soil" },   // line 88, out
+    { Path, "geol" },   // line 89, in
+    { Path, "/model/geol" },   // line 90, out
+    { Path, "nlcd" },   // line 91, NLCD source?
+    { Path, "/model/lc" },   // line 92,
+    { Path, "/model/calib" },   // line 93,
+    { Path, "/model/init" },   // line 94,
+    { Skip, NULL },   // line 95,
+    { Skip, NULL },   // line 96,
+    { Skip, NULL },   // line 97,
+    { Skip, NULL },   // line 98,
+    { Skip, NULL },   // line 99,
+    { Double, "res" },   // line 100, DEM resolution
+    { Double, "step0" },   // line 101, prep steps, adjustments
+    { Double, "step1" },   // line 102,
+    { Double, "step2" },   // line 103,
+    { Double, "step3" },   // line 104,
+    { Double, "step4" },   // line 105,
+    { Double, "step5" },   // line 106,
+    { Double, "step6" },   // line 107,
+    { Double, "step7" },   // line 108,
+    { Double, "step8" },   // line 109, adjustments
+    { Double, "scale" },   // line 110,
+    { Double, "start" },   // line 111, from .para file
+    { Double, "finish" },   // line 112, from .para file
+    { Skip, NULL },   // line 113,
+    { Skip, NULL },   // line 114,
+    { Skip, NULL },   // line 115,
+    { Skip, NULL },   // line 116,
+    { Skip, NULL },   // line 117,
+    { Skip, NULL },   // line 118,
+    { Skip, NULL },   // line 119,
+    { Skip, NULL },   // line 120,
+    { Skip, NULL },   // line 121,
+  };
+  int lines_size = sizeof(lines)/sizeof(lines[0]);
+  QFile file(projFile);
+  if (file.open(QFile::ReadOnly)) {
+    QTextStream in(&file);
+    in.readLine();   // date
+    QString oldDir = in.readLine();
+    QFileInfo fi2(oldDir);
+    oldDir = fi2.dir().absPath();   // directory's parent directory
+    int oldDirLength = oldDir.length();
+    QFileInfo fi(projFile);
+    QString projDir = fi.absoluteDir().absPath();
+    QgsProject *p = QgsProject::instance();
+    QString s = projFile.left(projFile.length() - 7) + "qgs";
+    p->setFileName(s);   // instead of pihmgis
+    p->writeEntry("Paths", "/Absolute", false);
+    p->writeEntry("pihm", "projDir", QString("."));
+    bool ok;
+    double d;
+    int i;
+    for( int idx=2; idx<lines_size && !in.atEnd(); ++idx) {
+      s = in.readLine();
+      switch (lines[idx].what) {
+      case Int:
+        i = s.toInt(&ok);
+        if (ok)
+          p->writeEntry("pihm", lines[idx].prop, i);
+        break;
+      case Double:
+        d = s.toDouble(&ok);
+        if (ok)
+          p->writeEntry("pihm", lines[idx].prop, d);
+        break;
+      case Path:
+      {
+        QFileInfo fi3(projDir, ".." + s.mid(oldDirLength));
+        s = p->writePath(fi.canonicalFilePath());
+      }       // no break!! Don't move
+      case String:
+        p->writeEntry("pihm", lines[idx].prop, s);
+        break;
+      case Raster:
+      {
+        QFileInfo fi(projDir, ".." + s.mid(oldDirLength));
+        s = fi.canonicalFilePath();
+      }
+        p->writeEntry("pihm", lines[idx].prop, p->writePath(s));
+        mQGisIface->addRasterLayer(s);
+        break;
+      case Vector:
+      {
+        QFileInfo fi(projDir, ".." + s.mid(oldDirLength));
+        s = fi.canonicalFilePath();
+      }
+        p->writeEntry("pihm", lines[idx].prop, p->writePath(s));
+        mQGisIface->addVectorLayer(s, QString::null, "ogr");
+        break;
+      }
+    }
+  }
+  }
 }
 
 void PIHMgis::runRunAllRaster(){

@@ -1,8 +1,9 @@
 #include <iostream>
 
 #include "generateShape.h"
-#include "shapefil.h"
-#include "fileStruct.h"
+#include <shapefil.h>
+
+#include <qgsproject.h>
 
 using namespace std;
 
@@ -21,13 +22,8 @@ void generateShape(QString shpFileName, double *avgVal, int NUM_FEATURES, int TY
   int SHP_TYPE[1], Entities[1];
   SHPGetInfo(shp, Entities, SHP_TYPE, NULL, NULL);
 
-  QString projDir, projFile;
-  QFile tFile("project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readEntry("pihm", "projDir");
 
   QString shpStr, dbfStr;
   shpStr = projDir+"/InfoViz/SpatialData.shp";
@@ -79,13 +75,8 @@ void generateShape2(QString shpFileName, double **avgVal, int NUM_FEATURES, int 
   int SHP_TYPE[1], Entities[1];
   SHPGetInfo(shp, Entities, SHP_TYPE, NULL, NULL);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString shpStr, dbfStr;
   shpStr = projDir+"/InfoViz/SpatialData.shp";

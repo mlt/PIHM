@@ -2,6 +2,10 @@
 #include "defineproject.h"
 #include "ui_defineproject.h"
 #include <iostream>
+#include <qgsproject.h>
+#include <qgisinterface.h>
+#include <qgsmaplayer.h>
+#include <qgsmessageoutput.h>
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
@@ -27,7 +31,7 @@ void DefineProject::on_pushButtonFile_clicked()
   }*/
   ui->lineEditFile->setText(str);
   QDateTime time;
-  QString month, dd, yyyy, hh, mm, folder;
+  QString month, dd, yyyy, hh, mm;
   dateStamp=time.currentDateTime().toString(); cout<<"System Time#= "<<qPrintable(dateStamp)<<"\n";
   month=dateStamp.mid(4,3);
   dd   =dateStamp.mid(8,2);
@@ -45,7 +49,7 @@ void DefineProject::on_pushButtonFile_clicked()
   folder=month+dd+yyyy+hh+mm;
   //out<<folder<<"\n";
   ui->lineEditFolder->setText(str+"/"+folder);
-  ui->lineEditFile2->setText(str+"/"+folder+"/"+folder+".pihmgis");
+  ui->lineEditFile2->setText(str+"/"+folder+"/"+folder+".qgs");
   //ui->lineEditFolder->setText(str.left(str.lastIndexOf("/",-1)+1));//polyStr.right(polyStr.length()-polyStr.lastIndexOf("/",-1));
 }
 
@@ -95,39 +99,12 @@ void DefineProject::on_pushButtonSave_clicked()
   dir.mkdir("DataModel");
   dir.mkdir("InfoViz");
 
-  QFile file(ui->lineEditFile2->text());
-  if(!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-    qWarning("File couldn't be saved! Try Again!");
-    QMessageBox::information(this,tr("New Project"),tr("Can Not Access File.\nClick OK to close the dialog!"),QMessageBox::Ok);
-    return;
-  }
-  else{
-    QTextStream out(&file);
-    /*QDateTime time;
-    QString dateStamp, month, dd, yyyy, hh, mm, folder;
-    dateStamp=time.currentDateTime().toString();
-    month=dateStamp.mid(4,3);
-    dd   =dateStamp.mid(8,2);
-    yyyy =dateStamp.mid(20.4);
-    hh   =dateStamp.mid(11,2);
-    mm   =dateStamp.mid(14,2);
-    folder=month+dd+yyyy+hh+mm;
-    out<<folder<<"\n";*/
-    //out<<">"<<month<<"<>"<<dd<<"<>"<<yyyy<<"<>"<<hh<<"<>"<<mm<<"<\n";
-    out<<"Created on: "<<dateStamp<<"\n";
-    out<<ui->lineEditFolder->text()<<"\n";
-    out<<ui->lineEditFile2->text()<<"\n";
-
-    //QFile tFile("project.txt");
-    QFile tFile(QDir::homePath()+"/project.txt");
-    cout << "here "<<"\n";
-    cout << "Proj File= " <<qPrintable(QDir::homePath()+"/project.txt") << "\n";
-    tFile.open(QIODevice::WriteOnly | QIODevice::Text);
-
-    QTextStream tout(&tFile);
-    tout<<ui->lineEditFolder->text()<<"\n";
-    tout<<ui->lineEditFile2->text()<<"\n";
-    QMessageBox::information(this,tr("Import Project"),tr("Project Created Successfully.\nClick OK to close the dialog!"),QMessageBox::Ok);
-    close();
-  }
+  QgsProject *p = QgsProject::instance();
+  p->setFileName(ui->lineEditFolder->text() + "/" + folder + ".qgs");
+  p->writeEntry("Paths", "/Absolute", false);   // let the user decide!!!
+  p->writeEntry("pihm", "projFile", p->writePath(ui->lineEditFile2->text()));
+  p->writeEntry("pihm", "projDir", p->writePath(ui->lineEditFolder->text()));
+  p->write();
+  QMessageBox::information(this,tr("New Project"),tr("Project Created Successfully.\nClick OK to close the dialog!"),QMessageBox::Ok);
+  close();
 }

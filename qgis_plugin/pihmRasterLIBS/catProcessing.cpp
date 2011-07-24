@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "lsm.h"
-#include "./../pihmLIBS/shapefil.h"
+#include <shapefil.h>
 
 void findIJCat(short **fdr, int i, int j, int *mIJ);
 int catchmentGrid(char *segFile, char *fdrFile, char *catFile);
@@ -40,7 +40,7 @@ int catchmentGrid(char *segFile, char *fdrFile, char *catFile){
   //printf("before gridwrite\n");
   err = gridwrite(catFile,(void **)slope,RPFLTDTYPE,nx,ny,dx,dy,bndbox,csize,mval,filetype);
   //printf("before gridwrite\n");
-    return 0;
+  return 0;
 }
 
 int trace(float **seg, short int **fdr, float **cat, int i, int j){

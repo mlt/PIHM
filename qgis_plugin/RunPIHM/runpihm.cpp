@@ -2,56 +2,57 @@
 #include <QApplication>
 
 #include "runpihm.h"
+#include <qgsproject.h>
 
 #include <iomanip>
 #include <fstream>
 using namespace std;
-#include "../MyNewThread.h"
+//#include "../MyNewThread.h"
 #include "../pihmLIBS/helpDialog/helpdialog.h"
 #include "../PIHM_v2.0/pihm.h"
-
-#include "../pihmLIBS/fileStruct.h"
+//#include "../PIHM_v1.5/calib.h"
+//#include "../PIHM_v1.5/et_is.h"
 
 runPIHMDlg::runPIHMDlg(QWidget *parent)
+  : rx("Tsteps = ([\\d.,]+)[^\\d.,]"), time(0.)
 {
+  setAttribute(Qt::WA_DeleteOnClose);
+//	QPlastiqueStyle style();
   setupUi(this);
   connect(browseButton, SIGNAL(clicked()), this, SLOT(folderBrowse()));
   connect(runButton, SIGNAL(clicked()), this, SLOT(run()));
   connect(helpButton, SIGNAL(clicked()), this, SLOT(help()));
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancelPIHM()));
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  connect( &mProcess, SIGNAL( readyReadStandardOutput() ), this, SLOT( stdoutAvailable() ) );
+  connect( &mProcess, SIGNAL( readyReadStandardError() ), this, SLOT( stderrAvailable() ) );
+  connect( &mProcess, SIGNAL( finished( int, QProcess::ExitStatus ) ), this, SLOT( processExit( int, QProcess::ExitStatus ) ) );
+
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   lineEdit->setText(projDir+"/DataModel");
-  lineEditFile->setText(readLineNumber(qPrintable(projFile), 50));
+  lineEditFile->setText(p->readEntry("pihm", "ID")); // 50
+}
+
+runPIHMDlg::~runPIHMDlg() {
+  cancelPIHM();
 }
 
 void runPIHMDlg::cancelPIHM()
 {
-  cout<<"\n->"<<thread;
-  if(thread != NULL )
-    thread->kill();
-  //thread->wait();
-  done(0);
-  close();
+  mProcess.kill();
+//	cout<<"\n->"<<thread;
+//	if(thread != NULL )
+//	thread->kill();
+//thread->wait();
+//	done(0);
+//	close();
 }
 void runPIHMDlg::folderBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout <<"\n$ "<< qPrintable(projDir) <<"\n";
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QDir::setCurrent(projDir);
   QString folder = QFileDialog::getExistingDirectory(this, "Choose Input Directory", projDir);
@@ -60,13 +61,12 @@ void runPIHMDlg::folderBrowse()
 
 void runPIHMDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
+  if (QProcess::Running == mProcess.state()) { // dealing with (slow) GUI, no need to be atomic
+    textBrowser->append("PIHM is already running");
+    return;
+  }
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   static int Number=0; int folderCreated=0; int runFlag = 1;
   QString dir, file; dir=lineEdit->text(); file=lineEditFile->text();
@@ -102,14 +102,16 @@ void runPIHMDlg::run()
   else
     fileID = lineEdit->text() + "/" + id;
   //fileNameID(qPrintable(fileID));
+/*
   char **nfile;
-  nfile    = (char **)malloc(2*sizeof(char *));
-  nfile[0] = (char * )malloc(400*sizeof(char));
-  nfile[1] = (char * )malloc(400*sizeof(char));
-  nfile[0] = "2 ";
-  nfile[1] = (char *)qPrintable(fileID);
-  cout<<nfile[1]<<"\n";
-
+        nfile    = (char **)malloc(2*sizeof(char *));
+        nfile[0] = (char * )malloc(400*sizeof(char));
+        nfile[1] = (char * )malloc(400*sizeof(char));
+        nfile[0] = "2 ";
+        //nfile[1] = (char *)qPrintable(fileID);
+  nfile[1] = (char *) fileID.ascii();
+  qDebug(nfile[1]);
+*/
   QDir hdir = QDir::home();
   QString home = hdir.homePath();
   QString logFileName(home+"/log.html");
@@ -117,8 +119,10 @@ void runPIHMDlg::run()
   log.open(qPrintable(logFileName));
   log<<"<html><body><font size=3 color=black><p> Running PIHM v2.0 ...<br>";      //</font></body></html>";
   log.close();
+//		textBrowser->setTextFormat(Qt::LogText);
+//		textBrowser->append("Running PIHM v2.0 ...");
   textBrowser->setSource(logFileName);
-  textBrowser->setFocus();
+//        textBrowser->setFocus();
   //textBrowser->modified=TRUE;
   QApplication::processEvents();
 
@@ -130,35 +134,96 @@ void runPIHMDlg::run()
     if(paraFile) {
       for(int ti=0; ti<23; ti++) paraFile>>tempNum;
       for(int tj=0; tj<9; tj++) { paraFile >>tempNumInt;
-                                  writeLineNumber(qPrintable(projFile), 101+tj, qPrintable(QString::number(tempNumInt,10)));
+                                  QString tmp("step%1");
+                                  p->writeEntry("pihm", tmp.arg(tj), tempNumInt); // 101+tj
                                   tempNumInt=(tempNumInt%1440==0 ? 2 : (tempNumInt % 60==0) ? 1 : 0);
-                                  tempScale=tempScale<tempNumInt ? tempScale : tempNumInt;}
+                                  tempScale=tempScale<tempNumInt ? tempScale : tempNumInt; }
       //tempNumInt=tempNumInt%1440==0 ? 2 : (tempNumInt % 60==0) ? 1 : 0;
       //tempNumInt=tempNumInt<60?0: (tempNumInt<60*24 && tempNumInt%60!=0) ? 0 : tempNumInt%1440!=0 ? 1 : 2;
-      writeLineNumber(qPrintable(projFile), 110, qPrintable(QString::number(tempScale,10)));
+      p->writeEntry("pihm", "scale", tempScale); // 110
 
       for(int ti=0; ti<12; ti++) paraFile >> tempNum;
-      paraFile >> tempNumInt; writeLineNumber(qPrintable(projFile), 111, qPrintable(QString::number(tempNumInt,10)));
-      paraFile >> tempNumInt; writeLineNumber(qPrintable(projFile), 112, qPrintable(QString::number(tempNumInt,10)));
+      paraFile >> start; p->writeEntry("pihm", "start", start); // 111
+      paraFile >> finish; p->writeEntry("pihm", "finish", finish); // 112
     }
-    thread = new MyNewThread(this);
-    thread->init(2, nfile, progressBar, logFileName);
-    cout<<"Over to tread Start\n";
-    thread->start();
-  }
-  else
-    cout<<"\nError: Input file(s) missing. Flag = "<<runFlag<<"\n";
+//	thread = new MyNewThread(NULL, fileID, logFileName);
+//	thread->init(2, nfile, progressBar, logFileName);
+//	QObject::connect( thread, SIGNAL( Update(int) ), this, SLOT( updateLog(int) ), Qt::QueuedConnection );
+//	QObject::connect( thread, SIGNAL( UpdateProgress(int) ), this, SLOT( UpdateProgress(int) ), Qt::QueuedConnection );
 
+    cout<<"Over to tread Start\n";
+    //      thread->start();
+    QString action("pihm %1");
+    action = action.arg(fileID);
+    textBrowser->setTextFormat(Qt::LogText);
+    textBrowser->append("<h4>Running " + action + "</h4>");
+    mProcess.start(action);
+  }
+  else {
+    QString s("Error: Input file(s) missing. Flag = %1");
+    textBrowser->append(s.arg(runFlag));
+    cout<<"\nError: Input file(s) missing. Flag = "<<runFlag<<"\n";
+  }
+/*
   log.open(qPrintable(logFileName), ios::app);
   //log<<" Done!";
-  log.close();
+        log.close();
   textBrowser->reload();
-  QApplication::processEvents();
-
+*/
 }
 
 void runPIHMDlg::help()
 {
   helpDialog* hlpDlg = new helpDialog(this, "Run PIHM", 1, "helpFiles/runpihm.html", "Help :: Run PIHM");
   hlpDlg->show();
+}
+
+void runPIHMDlg::updateLog(int progress)
+{
+//	static int i=0;
+//	qDebug("i=%d", i++);
+  textBrowser->reload();
+  textBrowser->scrollToBottom();
+  progressBar->setValue(progress);
+//	QApplication::processEvents();
+}
+
+void runPIHMDlg::UpdateProgress(int progress)
+{
+  progressBar->setValue(progress);
+}
+
+void runPIHMDlg::stdoutAvailable()
+{
+  /*
+  QList<QByteArray> lines( mProcess.readAllStandardOutput().split(13) );
+  foreach(const QString& line, lines) {
+    if (finish!=start && -1 != rx.indexIn(line))
+      time = rx.cap(1).toDouble();
+    else
+      textBrowser->append(line);
+  }
+  */
+  QString line(mProcess.readAllStandardOutput());
+  if (finish != start && -1 != rx.lastIndexIn(line)) {
+    time = rx.cap(1).toDouble();
+    progressBar->setValue(100.*(time-start)/(finish-start));
+  }
+}
+
+void runPIHMDlg::stderrAvailable()
+{
+  QString line( mProcess.readAllStandardError() );
+  textBrowser->append(line);
+}
+
+void runPIHMDlg::processExit( int code, QProcess::ExitStatus status) {
+  switch(status) {
+  case QProcess::NormalExit:
+    textBrowser->append(QString("<h4>pihm finished with exit code %1</h4>").arg(code));
+    break;
+  case QProcess::CrashExit:
+    textBrowser->append("<h4>pihm crashed</h4>");
+  }
+  progressBar->setValue(0);
 }

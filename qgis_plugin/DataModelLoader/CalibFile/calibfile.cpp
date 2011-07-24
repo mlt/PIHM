@@ -9,7 +9,7 @@
 #include <QPushButton>
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 using namespace std;
 
@@ -19,17 +19,10 @@ CalibFile::CalibFile(QWidget *parent)
   ui->setupUi(this);
   ui->calibFile->setFocus(Qt::OtherFocusReason);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  QString tempStr=readLineNumber(qPrintable(projFile), 49); tempStr.truncate(tempStr.length()-4);
-  ui->calibFile->setText(tempStr+"calib");
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+  QString ID = p->readEntry("pihm", "ID");
+  ui->calibFile->setText(projDir+"/DataModel/"+ID+".calib");
 }
 
 CalibFile::~CalibFile()
@@ -44,14 +37,8 @@ void CalibFile::on_pushButtonClose_clicked()
 
 void CalibFile::on_pushButtonBrowse_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getSaveFileName(this, "Choose CALIB File Name", projDir+"/DataModel", "CALIB file (*.calib)");
   if(!s.endsWith(".calib"))
@@ -61,16 +48,8 @@ void CalibFile::on_pushButtonBrowse_clicked()
 
 void CalibFile::on_pushButtonRun_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  writeLineNumber(qPrintable(projFile), 93, qPrintable(ui->calibFile->text()));
+  QgsProject *p = QgsProject::instance();
+  p->writeEntry("pihm", "/model/calib", p->writePath(ui->calibFile->text()));
 
   ofstream outFile;
   outFile.open((ui->calibFile->text()).toAscii());

@@ -110,7 +110,7 @@ char **CAllocate2 (int nrows,
     cur += len;
   }
 
-  return (char **)rows ;
+  return (char **)rows;
 
   /*
   Note :

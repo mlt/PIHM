@@ -3,7 +3,7 @@
 #include "../../pihmLIBS/generateShape.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <iostream>
 #include <fstream>
@@ -23,31 +23,26 @@ spatialPlotDlg::spatialPlotDlg(QDialog *parent)
   connect( pushButtonGenerate, SIGNAL( clicked() ), this, SLOT( generate()           ) );
   connect( pushButtonHelp,     SIGNAL( clicked() ), this, SLOT( help()               ) );
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  int scale=(readLineNumber(qPrintable(projFile), 110)).toInt();
-  int step=(readLineNumber(qPrintable(projFile), 106)).toInt();
+  int scale = p->readNumEntry("pihm", "scale");       // 110
+  int step = p->readNumEntry("pihm", "step5");       // 106
   comboBoxEle->setCurrentIndex(scale);
   comboBoxRiv->setCurrentIndex(scale);
   step= scale==0 ? step : scale==1 ? step/60 : step/1440;
   //lineEditEleTime->setText(QString::number(step, 10));
 
-  step=(readLineNumber(qPrintable(projFile), 109)).toInt();
+  step=p->readNumEntry("pihm", "step8");   // 109
   step= scale==0 ? step : scale==1 ? step/60 : step/1440;
   //lineEditRivTime->setText(QString::number(step,10));
 
-  lineEditEleShape->setText(readLineNumber(qPrintable(projFile), 48));
-  lineEditRivShape->setText(readLineNumber(qPrintable(projFile), 81));
+  lineEditEleShape->setText(p->readPath(p->readEntry("pihm", "TIN"))); // 48
+  lineEditRivShape->setText(p->readPath(p->readEntry("pihm", "rivdec"))); // 81
 
   int start, finish;
-  start = readLineNumber(qPrintable(projFile), 111).toInt();
-  finish= readLineNumber(qPrintable(projFile), 112).toInt();
+  start = p->readNumEntry("pihm", "start"); // 111
+  finish= p->readNumEntry("pihm", "finish"); // 112
   start = scale==0 ? start : scale==1 ? start/60 : start/1440; start = start +1;
   finish= scale==0 ? finish : scale==1 ? finish/60 : finish/1440;
   lineEditEleStart->setText(QString::number(start,10));
@@ -58,14 +53,8 @@ spatialPlotDlg::spatialPlotDlg(QDialog *parent)
 
 void spatialPlotDlg::browseEleShapeFile()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir) <<"\n";
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose TIN Shape File", projDir+"/DomainDecomposition","Shape File(*.shp *.SHP)");
   lineEditEleShape->setText(str);
@@ -73,14 +62,8 @@ void spatialPlotDlg::browseEleShapeFile()
 
 void spatialPlotDlg::browseRivShapeFile()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir) <<"\n";
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose Riv Shape File", projDir+"/VectorProcessing","Shape File(*.shp *.SHP)");
   lineEditRivShape->setText(str);
@@ -88,64 +71,22 @@ void spatialPlotDlg::browseRivShapeFile()
 
 void spatialPlotDlg::browseModelFile()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout <<"\nSP1 "<< qPrintable(projDir) <<"\n";
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString folder = QFileDialog::getExistingDirectory(this, "Choose Input Directory", projDir);
-  folder=folder+"/"+readLineNumber(qPrintable(projFile), 50);
+  folder=folder+"/"+p->readEntry("pihm", "ID");       // 50
   if(tabWidget->currentIndex()== ELEMENT_FEATURE)
   {
-    int featureIndex = comboBoxEleVariable->currentIndex();
-    if(featureIndex == 0)             //IS
-      folder=folder+".is.txt";
-    if(featureIndex == 1) //GW
-      folder=folder+".GW.txt";
-    if(featureIndex == 2) //unsat
-      folder=folder+".unsat.txt";
-    if(featureIndex == 3) //surf
-      folder=folder+".surf.txt";
-    if(featureIndex == 4) //ET0
-      folder=folder+".et0.txt";
-    if(featureIndex == 5) //ET1
-      folder=folder+".et1.txt";
-    if(featureIndex == 6) //ET2
-      folder=folder+".et2.txt";
-    if(featureIndex == 7) //Precip
-      folder=folder+".prep.txt";
-    if(featureIndex == 8) //NetPrecip
-      folder=folder+".nprep.txt";
-    if(featureIndex == 9) //Infil
-      folder=folder+".infil.txt";
-    if(featureIndex == 10) //Rech
-      folder=folder+".rech.txt";
+    //                      IS, GW, unsat, surf, ET0, ET1, ET2, Precip, NetPrecip, Infil, Rech
+    const char* suffix[] = {".is.txt", ".GW.txt", ".unsat.txt", ".surf.txt", ".et0.txt", ".et1.txt", ".et2.txt", ".prep.txt", ".nprep.txt", ".infil.txt", ".Rech.txt"};
+    folder += suffix[comboBoxEleVariable->currentIndex()];
   }
   if(tabWidget->currentIndex()== RIVER_FEATURE)
   {
-    int featureIndex = comboBoxRivVariable->currentIndex();
-    if(featureIndex == 0)             // head
-      folder=folder+".stage.txt";
-    if(featureIndex == 1) // inflow
-      folder=folder+".rivFlx0.txt";
-    if(featureIndex == 2) // outflow
-      folder=folder+".rivFlx1.txt";
-    if(featureIndex == 3) // baseflow tot
-      folder=folder+".rivFlx4.txt";
-    if(featureIndex == 4) // surfflow tot
-      folder=folder+".rivFlx2.txt";
-    if(featureIndex == 5) // base left
-      folder=folder+".rivFlx4.txt";
-    if(featureIndex == 6) // base right
-      folder=folder+".rivFlx5.txt";
-    if(featureIndex == 7) // surf left
-      folder=folder+".rivFlx2.txt";
-    if(featureIndex == 8) // surf right
-      folder=folder+".rivFlx3.txt";
+    //                      head, inflow, outflow, baseflow tot, surfflow tot, base left, base right, surf left, surf right
+    const char* suffix[] = {".stage.txt", ".rivFlx0.txt", ".rivFlx1.txt", ".rivFlx4.txt", ".rivFlx2.txt", ".rivFlx4.txt", ".rivFlx5.txt", ".rivFlx2.txt", ".rivFlx3.txt"};
+    folder += suffix[comboBoxRivVariable->currentIndex()];
   }
 
   //QString str = QFileDialog::getOpenFileName(this, "Choose Model Output File", "~/","Text File(*.txt *.TXT);; NetCDF File(*.nc *.NC)");
@@ -166,14 +107,8 @@ void spatialPlotDlg::generate()
   textBrowser->setModified(TRUE);
   QApplication::processEvents();
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir) <<"\n";
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   int bins;
   double **avgVal;
@@ -202,21 +137,11 @@ void spatialPlotDlg::generate()
     bins = lineEditBinsEle->text().toInt();
     int units = comboBoxEle->currentIndex();
     units = units==0 ? 1 : units==1 ? 60 : 1440;           // how many minutes
-    int lineNum, varIndex;             // choose while lineNum to read based on index
-    varIndex = comboBoxEleVariable->currentIndex();
-    if(varIndex==0) lineNum=106;             //intercep
-    if(varIndex==1) lineNum=101;             //sat
-    if(varIndex==2) lineNum=107; //unsat
-    if(varIndex==3) lineNum=102; //surf
-    if(varIndex==4) lineNum=108; //evap
-    if(varIndex==5) lineNum=108; //trans
-    if(varIndex==6) lineNum=108; //evap gw/sw
-    if(varIndex==7) lineNum=101; //prep ??
-    if(varIndex==8) lineNum=101; //nprep ??
-    if(varIndex==9) lineNum=101; //infil ??
-    if(varIndex==10) lineNum=105; //rech
-
-    int steps = readLineNumber(qPrintable(projFile), lineNum).toInt();
+    // intercep, sat, unsat, surf, evap, trans, evap gw/sw, prep ??, nprep ??, infil ??, rech
+    //                  106, 101, 107, 102, 108, 108, 108, 101, 101, 101, 105
+    const int index[] = {5, 0, 6, 1, 7, 7, 7, 0, 0, 0, 4};
+    QString var("step%1");
+    int steps = p->readNumEntry("pihm", var.arg(index[comboBoxEleVariable->currentIndex()]));
 
     startTime = startTime*units / steps; cout << "Start Row= "<<startTime<<"\n";
     finishTime= finishTime*units/ steps; cout << "FinishRow= "<<finishTime<<"\n";
@@ -230,7 +155,8 @@ void spatialPlotDlg::generate()
     if( outputFileName.endsWith("txt", Qt::CaseInsensitive) ) {
       inStream.open( qPrintable(outputFileName) );
       if(inStream == NULL) {
-        cout << "Couldn't Open File\n";
+        QMessageBox::critical(this, "Couldn't Open File", outputFileName);
+        return;
         //exit(1);
       }
       string str;
@@ -278,7 +204,7 @@ void spatialPlotDlg::generate()
           qWarning("Warning: Model does NOT have that many timestep information\n");
         for(int b=0; b<bins; b++)
           for(int i=0; i<NUM_ELE; i++)
-            avgVal[b][i]=avgVal[b][i]/(NUM_STEPS/bins); //?? /dataCount;
+            avgVal[b][i]=avgVal[b][i]/(NUM_STEPS/bins);  //?? /dataCount;
       }
     }
     else if( outputFileName.endsWith("nc", Qt::CaseInsensitive) ) {
@@ -339,7 +265,8 @@ void spatialPlotDlg::generate()
     if(varIndex==7) lineNum=109;             //surf left
     if(varIndex==8) lineNum=109;             //surf right
 
-    int steps = readLineNumber(qPrintable(projFile), lineNum).toInt();
+    QString var("step%1");
+    int steps = p->readNumEntry("pihm", var.arg(lineNum-101));
 
     startTime = startTime*units / steps; cout << "Start Row= "<<startTime<<"\n";
     finishTime= finishTime*units/ steps; cout << "FinishRow= "<<finishTime<<"\n";
@@ -417,7 +344,7 @@ void spatialPlotDlg::generate()
           qWarning("Warning: Model does NOT have that many timestep information\n");
         for(int b=0; b<bins; b++)
           for(int i=0; i<NUM_RIV; i++)
-            avgVal[b][i]=avgVal[b][i]/(NUM_STEPS/bins); //?? /dataCount;
+            avgVal[b][i]=avgVal[b][i]/(NUM_STEPS/bins);  //?? /dataCount;
       }
     }
     else if( outputFileName.endsWith("nc", Qt::CaseInsensitive) ) {
@@ -505,7 +432,7 @@ void spatialPlotDlg::on_comboBoxEleVariable_currentIndexChanged(int index)
   if(featureIndex == 9)               //Infil
     folder=folder+".infil.txt";
   if(featureIndex == 10)               //Rech
-    folder=folder+".rech.txt";
+    folder=folder+".Rech.txt";
   lineEditFileName->setText(folder);
 }
 

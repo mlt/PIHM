@@ -292,7 +292,7 @@ int gridread(char *file, void ***data, int datatype, int *nx, int *ny,
     }
 
 /*  Here assume file is ASCII  Close ESRI stuff. */
-  CellLyrClose(channel1);
+//    CellLyrClose(channel1);
   GridIOExit();
 
   *filetype=0;

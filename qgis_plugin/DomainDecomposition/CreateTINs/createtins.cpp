@@ -4,7 +4,7 @@
 #include "../../pihmLIBS/createTinShapeFile.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <iostream>
 #include <fstream>
@@ -20,31 +20,23 @@ createTINsDlg::createTINsDlg(QWidget *parent)
   connect(helpButton, SIGNAL(clicked()), this, SLOT(help()));
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(close()));
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  QString tempStr=readLineNumber(qPrintable(projFile), 42); tempStr.truncate(tempStr.length()-5);
-  eleFileLineEdit->setText(tempStr+".1.ele");
-  nodeFileLineEdit->setText(tempStr+".1.node");
-  shpFileLineEdit->setText(tempStr+"_q"+readLineNumber(qPrintable(projFile), 43)+"_a"+readLineNumber(qPrintable(projFile), 44)+"_o"+readLineNumber(qPrintable(projFile), 45)+".shp");
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+  QString tmp;
+  tmp = p->readPath(p->readEntry("pihm", "pslg")); // 41 & 42
+  tmp.truncate(tmp.length()-5);
+  eleFileLineEdit->setText(tmp+".1.ele");
+  nodeFileLineEdit->setText(tmp+".1.node");
+  QString Angle(p->readEntry("pihm", "/triangle/angle")); // 43
+  QString Area(p->readEntry("pihm", "/triangle/area")); // 44
+  QString Others(p->readEntry("pihm", "/triangle/others")); // 45
+  shpFileLineEdit->setText(tmp+"_q"+Angle+"_a"+Area+"_o"+Others+".shp");
 }
 
 void createTINsDlg::eleBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readEntry("pihm", "projDir");
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/DomainDecomposition","ele File(*.ele *.ELE)");
   eleFileLineEdit->setText(str);
@@ -52,14 +44,8 @@ void createTINsDlg::eleBrowse()
 
 void createTINsDlg::nodeBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/DomainDecomposition", "node File(*.node *.NODE)");
   nodeFileLineEdit->setText(str);
@@ -67,14 +53,8 @@ void createTINsDlg::nodeBrowse()
 
 void createTINsDlg::shpBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/DomainDecomposition","Shape File(*.shp *.SHP)");
   QString tmp = temp;
@@ -89,18 +69,10 @@ void createTINsDlg::shpBrowse()
 
 void createTINsDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  writeLineNumber(qPrintable(projFile), 46, qPrintable(eleFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 47, qPrintable(nodeFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 48, qPrintable(shpFileLineEdit->text()));
+  QgsProject *p = QgsProject::instance();
+  p->writeEntry("pihm", "ele", p->writePath(eleFileLineEdit->text())); // 46
+  p->writeEntry("pihm", "node", p->writePath(nodeFileLineEdit->text())); // 47
+  p->writeEntry("pihm", "TIN", p->writePath(shpFileLineEdit->text())); // 48
 
   QDir dir = QDir::home();
   QString home = dir.homePath();

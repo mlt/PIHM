@@ -428,10 +428,10 @@ void incfall(int n, float *elev1, short *s1,int **spos,
           ed=elev1[sloc[ip]]-
               elev1[spn];
         }
-        if(ed >= 0. && dir[jn][in] != 0) donothing = 1; /* If neighbor drains */
+        if(ed >= 0. && dir[jn][in] != 0) donothing = 1;  /* If neighbor drains */
         if(spn >= 0)     /* if neighbor is in flat   */
           if(s1[spn] >= 0 && s1[spn] < st   /*  If neighbor is not being  */
-             && dir[jn][in]  == 0) donothing = 1; /*  Incremented  */
+             && dir[jn][in]  == 0) donothing = 1;  /*  Incremented  */
       }
       if(donothing == 0)
       {
@@ -469,10 +469,10 @@ void incfall(int n, float *elev1, short *s1,int **spos,
             ed=elev1[sloc[ip]]-
                 elev1[spn];
           }
-          if(ed >= 0. && dir[jn][in] != 0) donothing = 1; /* If neighbor drains */
+          if(ed >= 0. && dir[jn][in] != 0) donothing = 1;  /* If neighbor drains */
           if(spn >= 0)     /* if neighbor is in flat   */
             if(s1[spn] >= 0 && s1[spn] < st /*  If neighbor is not being  */
-               && dir[jn][in]  == 0) donothing = 1; /*  Incremented  */
+               && dir[jn][in]  == 0) donothing = 1;  /*  Incremented  */
         }
         if(donothing == 0)
         {
@@ -526,7 +526,7 @@ void incrise(int n, float *elev1, short *s2,int **spos, int iter, int *sloc)
     {
       s2[sloc[ip]]=s2[sloc[ip]]+dn[sloc[ip]];
       ninc=ninc+dn[sloc[ip]];
-      if(dn[sloc[ip]] == 0) done=0; /*  if still some not being incremented continue
+      if(dn[sloc[ip]] == 0) done=0;  /*  if still some not being incremented continue
                   looping  */
     }
     printf("incrise %d %d\n",ninc,n);
@@ -775,7 +775,7 @@ void sloped8(void )
         jn=j+d2[dir[j][i]];
         in=i+d1[dir[j][i]];
         ed=elev[j][i]-elev[jn][in];
-        slope[j][i]= ed*fact[dir[j][i]] ;
+        slope[j][i]= ed*fact[dir[j][i]];
       }
       else
         slope[j][i]= -1.;

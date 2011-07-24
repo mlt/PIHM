@@ -1,6 +1,10 @@
 #include <QtGui>
 #include "rivfile.h"
 
+#include <qgsproject.h>
+#include <qgsmaplayerregistry.h>
+#include <qgsmaplayer.h>
+
 #include <iomanip>
 
 #include <fstream>
@@ -13,9 +17,7 @@ using namespace std;
 #include "../../pihmLIBS/calDownSegment.h"
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
-#include "../../pihmLIBS/shapefil.h"
-
-#include "../../pihmLIBS/fileStruct.h"
+#include <shapefil.h>
 
 rivFileDlg::rivFileDlg(QWidget *parent)
 {
@@ -29,35 +31,25 @@ rivFileDlg::rivFileDlg(QWidget *parent)
   connect(helpButton, SIGNAL(clicked()), this, SLOT(help()));
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(close()));
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   //riverLineEdit->setText(readLineNumber(qPrintable(projFile), 4));
-  eleLineEdit->setText(readLineNumber(qPrintable(projFile), 46));
-  nodeLineEdit->setText(readLineNumber(qPrintable(projFile), 47));
-  riverLineEdit->setText(readLineNumber(qPrintable(projFile), 37));
-  QString tempStr; tempStr=readLineNumber(qPrintable(projFile), 47); tempStr.truncate(tempStr.length()-4);
+  eleLineEdit->setText(p->readPath(p->readEntry("pihm", "ele"))); // 46
+  nodeLineEdit->setText(p->readPath(p->readEntry("pihm", "node"))); // 47
+  riverLineEdit->setText(p->readPath(p->readEntry("pihm", "strsplit")));       // 37
+  QString tempStr=p->readPath(p->readEntry("pihm", "node")); // 47
+  tempStr.truncate(tempStr.length()-4);
   neighLineEdit->setText(tempStr+"neigh");
-  tempStr=readLineNumber(qPrintable(projFile), 49); tempStr.truncate(tempStr.length()-4);
+  tempStr=p->readPath(p->readEntry("pihm", "/model/mesh")); // 49
+  tempStr.truncate(tempStr.length()-4);
   rivLineEdit->setText(tempStr+"riv");
 }
 
 void rivFileDlg::riverBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/VectorProcessing","shp File(*.shp *.SHP)");
   riverLineEdit->setText(str);
@@ -66,14 +58,8 @@ void rivFileDlg::riverBrowse()
 
 void rivFileDlg::eleBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/DomainDecomposition","ele File(*.ele *.ELE)");
   eleLineEdit->setText(str);
@@ -81,14 +67,8 @@ void rivFileDlg::eleBrowse()
 
 void rivFileDlg::nodeBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/DomainDecomposition","node File(*.node *.NODE)");
   nodeLineEdit->setText(str);
@@ -96,14 +76,8 @@ void rivFileDlg::nodeBrowse()
 
 void rivFileDlg::neighBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/DomainDecomposition","neigh File(*.neigh *.NEIGH)");
   neighLineEdit->setText(str);
@@ -112,14 +86,8 @@ void rivFileDlg::neighBrowse()
 
 void rivFileDlg::rivBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/DataModel", "riv File(*.riv *RIV)");
   QString tmp  = temp;
@@ -132,20 +100,14 @@ void rivFileDlg::rivBrowse()
 
 void rivFileDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  writeLineNumber(qPrintable(projFile), 75, qPrintable(riverLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 76, qPrintable(eleLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 77, qPrintable(nodeLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 78, qPrintable(neighLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 80, qPrintable(rivLineEdit->text()));
+  p->writeEntry("pihm", "strsplit", p->writePath(riverLineEdit->text())); // 75
+  p->writeEntry("pihm", "ele", p->writePath(eleLineEdit->text())); // 76
+  p->writeEntry("pihm", "node", p->writePath(nodeLineEdit->text())); // 77
+  p->writeEntry("pihm", "neigh", p->writePath(neighLineEdit->text())); // 78
+  p->writeEntry("pihm", "/model/riv", p->writePath(rivLineEdit->text())); // 80
   //writeLineNumber(qPrintable(projFile), 81, qPrintable(->text()));
 
   QDir dir = QDir::home();
@@ -316,10 +278,27 @@ void rivFileDlg::run()
 
     newshp.truncate(newshp.length()-4); newshp.append("_Decomp.shp");
     newdbf.truncate(newdbf.length()-4); newdbf.append("_Decomp.dbf");
-    writeLineNumber(qPrintable(projFile), 81, qPrintable(newshp));
+    p->writeEntry("pihm", "rivdec", p->writePath(newshp)); // 81
 
     qWarning("\n%s", qPrintable(newshp));
     qWarning("\n%s", qPrintable(newdbf));
+
+    // Remove existing layer from QGis {
+    QgsMapLayerRegistry *r = QgsMapLayerRegistry::instance();
+    QMap<QString, QgsMapLayer*> & ll = r->mapLayers();
+    QMap<QString, QgsMapLayer*>::iterator iter = ll.begin();
+    QStringList delme;
+    while (iter != ll.end()) {
+      QgsMapLayer* l = iter.value();
+      if (0 == QString::compare(newshp, l->source()))
+        delme << iter.key();
+      ++iter;
+    }
+    foreach (const QString &str, delme) {
+      qDebug("Removing %s layer from QGis", qPrintable(str));
+      r->removeMapLayer(str); //, false);
+    }
+    // } Remove existing layer from QGis
 
     QString eleFileName(qPrintable((eleLineEdit->text())));
     QString nodeFileName(qPrintable((nodeLineEdit->text())));
@@ -447,6 +426,7 @@ void rivFileDlg::run()
       if(maxOrder < orderVal)
         maxOrder = orderVal;
     }
+    DBFClose(dbf); dbf = NULL;
     riv<<"Shape\t"   <<maxOrder<<"\n";
     for(int c=1; c<=maxOrder; c++) {
       riv<<   c<<"\t"<<     //index

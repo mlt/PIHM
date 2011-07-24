@@ -5,7 +5,7 @@
 #include <fstream>
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 using namespace std;
 
@@ -14,16 +14,11 @@ InitFile::InitFile(QWidget *parent)
 {
   ui->setupUi(this);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString tempStr=readLineNumber(qPrintable(projFile), 49); tempStr.truncate(tempStr.length()-4);
+  QString tempStr=p->readPath(p->readEntry("pihm", "/model/mesh")); // 49
+  tempStr.truncate(tempStr.length()-4);
   ui->lineEditMeshFile->setText(tempStr+"mesh");
   ui->lineEditRivFile->setText(tempStr+"riv");
   ui->lineEditInitFile->setText(tempStr+"init");
@@ -36,14 +31,8 @@ InitFile::~InitFile()
 
 void InitFile::on_pushButton_MeshFile_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getOpenFileName(this, "Choose Mesh File", projDir+"/DataModel", "Mesh File (*.mesh)");
   ui->lineEditMeshFile->setText(s);
@@ -51,14 +40,8 @@ void InitFile::on_pushButton_MeshFile_clicked()
 
 void InitFile::on_pushButton_RivFile_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getOpenFileName(this, "Choose Riv File", projDir+"/DataModel", "Riv File (*.riv)");
   ui->lineEditRivFile->setText(s);
@@ -66,14 +49,8 @@ void InitFile::on_pushButton_RivFile_clicked()
 
 void InitFile::on_pushButton_InitFile_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getSaveFileName(this, "Choose Init File Name", projDir+"/DataModel", "Init file (*.init)");
   if(!s.endsWith(".init"))
@@ -88,16 +65,10 @@ void InitFile::on_pushButton_Close_clicked()
 
 void InitFile::on_pushButton_Run_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  writeLineNumber(qPrintable(projFile), 94, qPrintable(ui->lineEditInitFile->text()));
+  p->writeEntry("pihm", "/model/init", p->writePath(ui->lineEditInitFile->text())); // 94
 
   int RunFlag=1;
   ifstream inFileMesh, inFileRiv;

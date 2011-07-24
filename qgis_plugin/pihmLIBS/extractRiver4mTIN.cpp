@@ -4,9 +4,9 @@
 #include <math.h>
 
 #define PI 3.14
-#define distPt(p1, p2) fabs(p1.x-p2.x)+fabs(p1.y-p2.y)
-#define distXY(x1, y1, x2, y2) fabs(x1-x2)+fabs(y1-y2)
-#define distPtXY(p, x, y) fabs(p.x-x)+fabs(p.y-y)
+#define distPt(p1, p2) (fabs(p1.x-p2.x)+fabs(p1.y-p2.y))
+#define distXY(x1, y1, x2, y2) (fabs(x1-x2)+fabs(y1-y2))
+#define distPtXY(p, x, y) (fabs(p.x-x)+fabs(p.y-y))
 //#define SLOPE(p1, p2) (180.0/PI)*atan((p2.y-p1.y+.0000001)/(p2.x-p1.x))
 
 
@@ -166,7 +166,7 @@ void extractRiver4mTIN(const char* shpFileName, const char* dbfFileName, const c
     //dist = oldDist+1;
 
     //cout<<"\npt1= "<<numPt<<" ("<<pt1.x<<","<<pt1.y<<") "<<"\n";
-    while(distPt(pt2, node[numPt])>0.001) {
+    while(distPt(pt2, node[numPt])>0.001 && neighNodeCount[numPt]>0) {
       /*
       cout<<"\n"<<numPt<<"\n";
       for(int ii=0; ii<neighNodeCount[numPt]; ii++)

@@ -2,6 +2,8 @@
 #include <fstream>
 #include <iomanip>
 #include "shapefil.h"
+#include <QDebug>
+#include <QFile>
 
 using namespace std;
 
@@ -11,11 +13,11 @@ void calDownSegment(const char* dbfFileName, int BC){
   DBFHandle dbf = DBFOpen(dbfFileName, "rb");
   cout<<"Checking Requirent Field";
   int FId= DBFGetFieldIndex(dbf, "FID");
-  if( FId == -1) { cout<<"Error: FID field does NOT exist\nCan not proceed\n"; return; }
+  if( FId == -1) { qDebug("Error: FID field does NOT exist\nCan not proceed"); return; }
   int FROM_NODE= DBFGetFieldIndex(dbf, "FROM_NODE");
-  if( FId == -1) { cout<<"Error: FROM_NODE field does NOT exist\nCan not proceed\n"; return; }
+  if( FROM_NODE == -1) { cout<<"Error: FROM_NODE field does NOT exist\nCan not proceed\n"; return; }
   int TO_NODE = DBFGetFieldIndex(dbf, "TO_NODE");
-  if( FId == -1) { cout<<"Error: TO_NODE field does NOT exist\nCan not proceed\n"; return; }
+  if( TO_NODE == -1) { cout<<"Error: TO_NODE field does NOT exist\nCan not proceed\n"; return; }
 
   DBFHandle newdbf = DBFCreate("temp.dbf");
 
@@ -92,19 +94,9 @@ void calDownSegment(const char* dbfFileName, int BC){
   DBFClose(dbf);
   DBFClose(newdbf);
   //cout<<"here2";
-
-  char buffer[100];
-  ifstream infile;
-  ofstream outfile;
-  infile.open("temp.dbf",ios::binary|ios::in);
-  outfile.open(dbfFileName,ios::binary|ios::out);
-  j=1;
-  cout<<"\nWriting to the .dbf file...";
-  while(infile) {
-    infile.read(buffer,100);
-    infile.seekg(j*100); j++;
-    outfile.write(buffer,100);
-  }
+  if (QFile::exists(dbfFileName))
+    if (!QFile::remove(dbfFileName))
+      qDebug("Failed to remove old dbfFileName @ %s", __FILE__);
+  QFile::rename("temp.dbf", dbfFileName);
   cout<<"DONE!\n\n";
-
 }

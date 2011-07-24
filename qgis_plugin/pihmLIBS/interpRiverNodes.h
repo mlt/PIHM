@@ -5,9 +5,9 @@
 #include <math.h>
 
 #define PI 3.14
-#define distPt(p1, p2) fabs(p1.x-p2.x)+fabs(p1.y-p2.y)
-#define distXY(x1, y1, x2, y2) fabs(x1-x2)+fabs(y1-y2)
-#define distPtXY(p, x, y) fabs(p.x-x)+fabs(p.y-y)
+#define distPt(p1, p2) (fabs(p1.x-p2.x)+fabs(p1.y-p2.y))
+#define distXY(x1, y1, x2, y2) (fabs(x1-x2)+fabs(y1-y2))
+#define distPtXY(p, x, y) (fabs(p.x-x)+fabs(p.y-y))
 //#define SLOPE(p1, p2) (180.0/PI)*atan((p2.y-p1.y+.0000001)/(p2.x-p1.x))
 
 
@@ -206,7 +206,7 @@ void interpRiverNodes(const char* shpFileName, const char* dbfFileName, const ch
     //dist = oldDist+1;
 
     //cout<<"\npt1= "<<numPt<<" ("<<pt1.x<<","<<pt1.y<<") "<<"\n";
-    while(distPt(pt2, node[numPt])>0.001) {
+    while(distPt(pt2, node[numPt])>0.001 && neighNodeCount[numPt]>0) {
       /*
       cout<<"\n"<<numPt<<"\n";
       for(int ii=0; ii<neighNodeCount[numPt]; ii++)
@@ -227,7 +227,14 @@ void interpRiverNodes(const char* shpFileName, const char* dbfFileName, const ch
       }
       //cout<<numPt<<" "<<neighNode[numPt][j]<<"\n"; getchar(); getchar();
 
-      RIV_para[neighNode[numPt][j]][3]=((distPt(pt1,node[neighNode[numPt][j]]))/(distPt(pt1,pt2)))*(RIV_para[RIV_numPt2][3]-RIV_para[RIV_numPt1][3])+RIV_para[RIV_numPt1][3];
+      int ct = neighNodeCount[numPt];
+      int idx = neighNode[numPt][j];
+      //qDebug() << idx;
+      double dist1 = distPt(pt1,node[idx]);
+      double dist2 = distPt(pt1,pt2);
+      double riv1 = RIV_para[RIV_numPt1][3];
+      double riv2 = RIV_para[RIV_numPt2][3];
+      RIV_para[neighNode[numPt][j]][3]=dist1/dist2*(riv2-riv1)+riv1;
 
       X[0] = node[numPt].x;
       Y[0] = node[numPt].y;
@@ -251,7 +258,7 @@ void interpRiverNodes(const char* shpFileName, const char* dbfFileName, const ch
       oldDist = distPt(node[numPt], pt2);
     }
     //cout<<"\nend\n";//getchar(); getchar();
-  }
+  } // for(int i=0; i<recordCount; i++)
 
   for(int RIV_i=1; RIV_i<=RIV_numNode; RIV_i++) {
     newMeshFile<<RIV_i<<"\t"<<setprecision(20)<<RIV_para[RIV_i][0]<<"\t"<<setprecision(20)<<RIV_para[RIV_i][1]<<"\t"<<setprecision(15)<<RIV_para[RIV_i][2]<<"\t"<<setprecision(15)<<RIV_para[RIV_i][3]<<"\n";

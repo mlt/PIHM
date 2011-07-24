@@ -4,8 +4,7 @@
 #include "../../pihmRasterLIBS/bin2ascii.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 #include "../../pihmgis.h"
-#include "../../pihmLIBS/homeDir.h"
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <qgsrasterlayer.h>
 #include <fstream>
@@ -19,18 +18,17 @@ fillpitsDlg::fillpitsDlg(QWidget *parent)
   connect(runButton, SIGNAL(clicked()), this, SLOT(run()));
   connect(helpButton, SIGNAL(clicked()), this, SLOT(help()));
   connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
+
+  QgsProject *p = QgsProject::instance();
+  QString s(p->readEntry("pihm", "dem"));
+  if (!s.isEmpty())
+    inputFileLineEdit->setText(p->readPath(s));
 }
 
 void fillpitsDlg::inputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"DEM Grid File(*.adf *.asc)");
   inputFileLineEdit->setText(str);
@@ -40,14 +38,8 @@ void fillpitsDlg::inputBrowse()
 
 void fillpitsDlg::outputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/RasterProcessing","DEM Grid File(*.adf *.asc)");
   QString tmp = temp;
@@ -61,20 +53,15 @@ void fillpitsDlg::outputBrowse()
 
 void fillpitsDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir)<<"\n$";
-  cout << qPrintable(projFile)<<"\n";
-  writeLineNumber(qPrintable(projFile), 3, qPrintable(inputFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 4, qPrintable(outputFileLineEdit->text()));
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readEntry("pihm", "projDir");
+  QString projFile = p->readEntry("pihm", "projFile");
 
-  QString inputFileName((inputFileLineEdit->text()));
-  QString outputFileName((outputFileLineEdit->text()));
+  QString inputFileName(inputFileLineEdit->text());
+  QString outputFileName(outputFileLineEdit->text());
+
+  p->writeEntry("pihm", "dem", p->writePath(inputFileName)); // 3
+  p->writeEntry("pihm", "fill", p->writePath(outputFileName)); // 4
 
   QDir dir = QDir::home();
   QString home = dir.homePath();
@@ -155,8 +142,8 @@ void fillpitsDlg::run()
     tempFile >> tempChar;
     int tempDouble; tempFile >> tempDouble;
     cout << "DEM Resolution= "<<tempDouble<<"\n";
-    tempFile.close(); QString tempStr;
-    writeLineNumber(qPrintable(projFile), 100, qPrintable(QString::number(tempDouble, 10)));
+    tempFile.close(); // QString tempStr;
+    p->writeEntry("pihm", "res", tempDouble); // 100
     //getchar(); getchar();
 
     int err = flood((char *)qPrintable(inputAsciiFileName), "dummy", (char *)qPrintable(outputFileName) );

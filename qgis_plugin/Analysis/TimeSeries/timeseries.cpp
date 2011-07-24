@@ -1,12 +1,12 @@
 #include <QtGui>
 
+#include <qgsproject.h>
+
 #include <iostream>
 #include <fstream>
 #include "timeseries.h"
 #include "plotTS.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
-
-#include "../../pihmLIBS/fileStruct.h"
 
 #include <qwt_plot_canvas.h>
 #include <qwt_magnifier.h>
@@ -17,6 +17,7 @@
 using namespace std;
 
 timeSeriesDlg::timeSeriesDlg()
+  : rx("[\\s,]*(\\d+)")
 {
 
   setupUi(this);
@@ -32,81 +33,37 @@ timeSeriesDlg::timeSeriesDlg()
   connect( pushButtonHelp,   SIGNAL( clicked() ), this, SLOT( help()   ) );
   connect( pushButtonSavePlot, SIGNAL( clicked() ), this, SLOT( savePlot() ) );
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  int scale=(readLineNumber(qPrintable(projFile), 110)).toInt();
-  int step=(readLineNumber(qPrintable(projFile), 106)).toInt();
+  int scale=p->readNumEntry("pihm", "scale");   // 110
+  int step=p->readNumEntry("pihm", "step5");       // 106 // whatever it is
   comboBox->setCurrentIndex(scale);
   comboBox_2->setCurrentIndex(scale);
   step= scale==0 ? step : scale==1 ? step/60 : step/1440;
   lineEditEleTime->setText(QString::number(step, 10));
 
-  step=(readLineNumber(qPrintable(projFile), 109)).toInt();
+  step = p->readNumEntry("pihm", "step8");   // 109
   step= scale==0 ? step : scale==1 ? step/60 : step/1440;
   lineEditRivTime->setText(QString::number(step,10));
 }
 
 void timeSeriesDlg::browse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout <<"\nTS1 "<< qPrintable(projDir) <<"\n";
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   //QDir::setCurrent(projDir);
   QString folder = QFileDialog::getExistingDirectory(this, "Choose Input Directory", projDir);
-  folder=folder+"/"+readLineNumber(qPrintable(projFile), 50);
-  if(tabWidget->currentIndex()== ELEMENT_FEATURE)
-  {
-    int featureIndex = comboBoxEleFeature->currentIndex();
-    if(featureIndex == 0)
-      folder=folder+".is.txt";
-    if(featureIndex == 1)
-      folder=folder+".GW.txt";
-    if(featureIndex == 2)
-      folder=folder+".unsat.txt";
-    if(featureIndex == 3)
-      folder=folder+".surf.txt";
-    if(featureIndex == 4)
-      folder=folder+".et0.txt";
-    if(featureIndex == 5)
-      folder=folder+".et1.txt";
-    if(featureIndex == 6)
-      folder=folder+".et2.txt";
-    if(featureIndex == 10)
-      folder=folder+".Rech.txt";
+  folder=folder+"/"+p->readEntry("pihm", "ID"); // 50
+  if(tabWidget->currentIndex()== ELEMENT_FEATURE) {
+    const char* suffix[] = {".is.txt", ".GW.txt", ".unsat.txt", ".surf.txt", ".et0.txt", ".et1.txt", ".et2.txt", "", "", "", ".Rech.txt"};
+    folder = folder + suffix[comboBoxEleFeature->currentIndex()];
   }
-  if(tabWidget->currentIndex()== RIVER_FEATURE)
-  {
-    int featureIndex = comboBoxRivFeature->currentIndex();
-    if(featureIndex == 0)             // head
-      folder=folder+".stage.txt";
-    if(featureIndex == 1)             // inflow
-      folder=folder+".rivFlx0.txt";
-    if(featureIndex == 2)             //outflow
-      folder=folder+".rivFlx1.txt";
-    if(featureIndex == 3)             //baseflow
-      folder=folder+".rivFlx4.txt";
-    if(featureIndex == 4)             // surf flow
-      folder=folder+".rivFlx2.txt";
-    if(featureIndex == 5)             // base left
-      folder=folder+".rivFlx4.txt";
-    if(featureIndex == 6)             // base right
-      folder=folder+".rivFlx5.txt";
-    if(featureIndex == 7)             // surf left
-      folder=folder+".rivFlx2.txt";
-    if(featureIndex == 8)             // surf right
-      folder=folder+".rivFlx3.txt";
+  if(tabWidget->currentIndex()== RIVER_FEATURE) {
+    //                head,         inflow,         outflow,        baseflow,       surf flow,      base left,      base right,     surf left,      surf right
+    const char* suffix[] = {".stage.txt", ".rivFlx0.txt", ".rivFlx1.txt", ".rivFlx4.txt", ".rivFlx2.txt", ".rivFlx4.txt", ".rivFlx5.txt", ".rivFlx2.txt", ".rivFlx3.txt"};
+    folder = folder + suffix[comboBoxEleFeature->currentIndex()];
     /*
     if(featureIndex == 0)
             folder=folder+".stage.txt";
@@ -123,7 +80,7 @@ if(featureIndex == 4)
 
   lineEditFileName->setText(folder);
 }
-PlotTS *plotts;
+
 void timeSeriesDlg::plot()
 {
 
@@ -139,15 +96,11 @@ void timeSeriesDlg::plot()
   textBrowser->setModified(TRUE);
   QApplication::processEvents();
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+
   cout <<"\nTS "<< qPrintable(projDir) <<"\n";
-  cout<<"F Name= "<<qPrintable(projFile)<<"\n";
+//   cout<<"F Name= "<<qPrintable(projFile)<<"\n";
 
   double **xVal, **yVal;
   int dataCount;
@@ -179,15 +132,12 @@ void timeSeriesDlg::plot()
     if(featureIndex == 0) {
       METHOD = 1;
       QString idString = lineEditEleID->text();
-      ofstream aFile; aFile.open("fileInTimeSeries.txt");
-      aFile << qPrintable(idString);
-      aFile.close();
-      ifstream bFile; bFile.open("fileInTimeSeries.txt");
-      int I=0;
-      while(!bFile.eof()) {
-        bFile >> id[I++];
-        //id[I] = idString.toInt();
-        NumTS = I;
+      int pos = 0;    // where we are in the string
+      NumTS = 0;
+      while ((pos = rx.indexIn(idString, pos)) != -1) {
+        pos += rx.matchedLength();      // move along in str
+        id[NumTS] = rx.cap(1).toInt();
+        ++NumTS;
       }
     }
     if(featureIndex == 1) {
@@ -196,15 +146,12 @@ void timeSeriesDlg::plot()
     if(featureIndex == 2) {
       METHOD = 3;
       QString idString = lineEditEleID->text();
-      ofstream aFile; aFile.open("fileInTimeSeries.txt");
-      aFile << qPrintable(idString);
-      aFile.close();
-      ifstream bFile; bFile.open("fileInTimeSeries.txt");
-      int I=0;
-      while(!bFile.eof()) {
-        bFile >> id[I++];
-        //id[I] = idString.toInt();
-        NumTS = I;
+      int pos = 0;    // where we are in the string
+      NumTS = 0;
+      while ((pos = rx.indexIn(idString, pos)) != -1) {
+        pos += rx.matchedLength();      // move along in str
+        id[NumTS] = rx.cap(1).toInt();
+        ++NumTS;
       }
     }
     xVal = (double **)malloc(NumTS*sizeof(double *));
@@ -218,31 +165,13 @@ void timeSeriesDlg::plot()
     cout<<"Time Step a = "<<TIME_STEP<<"\n";
     variableIndex = comboBoxEleVariable->currentIndex();
     cout<<"here 3\n" << "variableIndex = " <<variableIndex <<"\n";
-    cout<<"F Name= "<<qPrintable(projFile)<<"\n";
-    cout<<"4m file= "<<qPrintable(readLineNumber(qPrintable(projFile), 101))<<"\n";
-    cout<<"Int= "<<(readLineNumber(qPrintable(projFile), 101)).toInt()<<"\n";             //getchar(); getchar();
-    if(variableIndex==0)             // intercep
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 106)).toInt());
-    if(variableIndex==1)             // sat
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 101)).toInt());
-    if(variableIndex==2)             // unsat
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 107)).toInt());
-    if(variableIndex==3)             // surf
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 102)).toInt());
-    if(variableIndex==4)             // et0
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 108)).toInt());
-    if(variableIndex==5)             // et1
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 108)).toInt());
-    if(variableIndex==6)             // et2
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 108)).toInt());
-    if(variableIndex==7)             // precip
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 101)).toInt());
-    if(variableIndex==8)             // net precip
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 101)).toInt());
-    if(variableIndex==9)             // infil
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 101)).toInt());
-    if(variableIndex==10)             // recharge
-      TIME_STEP = (int) (TIME_STEP / (readLineNumber(qPrintable(projFile), 105)).toInt());
+//		cout<<"F Name= "<<qPrintable(projFile)<<"\n";
+//                cout<<"4m file= "<<qPrintable(readLineNumber(qPrintable(projFile), 101))<<"\n"; // step0
+//                cout<<"Int= "<<(readLineNumber(qPrintable(projFile), 101)).toInt()<<"\n"; //getchar(); getchar();
+    //                   106, 101, 107, 102, 108, 108, 108, 101 (aka step0), 101, 101, 105
+    const int index[] = {5,   0,   6,   1,   7,   7,   7,   0,               0,   0,   4};
+    QString var("step%1");
+    TIME_STEP = TIME_STEP / p->readNumEntry("pihm", var.arg(variableIndex));
     cout<<"here 4\n";
     cout<<"Time Step b = "<<TIME_STEP<<"\n";             //getchar(); getchar();
 
@@ -252,7 +181,9 @@ void timeSeriesDlg::plot()
       inStream.open(qPrintable(fileName));
       if(inStream == NULL) {
         printf("Couldn't open File\n");
-        exit(1);
+        QString str("<b>Couldn't open %1 file</b>");
+        textBrowser->setText(str.arg(fileName));
+        return;
       }
       string str;
       getline(inStream, str);
@@ -576,20 +507,14 @@ void timeSeriesDlg::plot()
     if(featureIndex == 0) {
       METHOD = 1;
       QString idString = lineEditRivID->text();
-      ofstream aFile; aFile.open("fileInTimeSeries.txt");
-      //idString = "2 3 4 5 6 7";
-      //idString ="5";
-      aFile << qPrintable(idString);                   //aFile << "\n";
-      aFile.close();
-      ifstream bFile; bFile.open("fileInTimeSeries.txt");
-      int I=0;
-      while(!bFile.eof()) {
-        bFile >> id[I++];
-        //id[I] = idString.toInt();
-        NumTS = I;
+      int pos = 0;    // where we are in the string
+      NumTS = 0;
+      while ((pos = rx.indexIn(idString, pos)) != -1) {
+        pos += rx.matchedLength();      // move along in str
+        id[NumTS] = rx.cap(1).toInt();
+        ++NumTS;
       }
-      bFile.close();
-      cout << "NumTS= " << NumTS << "\n";
+      qDebug("NumTS= %d", NumTS);
     }
     if(featureIndex == 1) {
       METHOD = 2;
@@ -597,19 +522,13 @@ void timeSeriesDlg::plot()
     if(featureIndex == 2) {
       METHOD = 3;
       QString idString = lineEditRivID->text();
-      ofstream aFile; aFile.open("fileInTimeSeries.txt");
-      //idString = "2 3 4 5 6 7";
-      //idString ="5";
-      aFile << qPrintable(idString);                   //aFile << "\n";
-      aFile.close();
-      ifstream bFile; bFile.open("fileInTimeSeries.txt");
-      int I=0;
-      while(!bFile.eof()) {
-        bFile >> id[I++];
-        //id[I] = idString.toInt();
-        NumTS = I;
+      int pos = 0;    // where we are in the string
+      NumTS = 0;
+      while ((pos = rx.indexIn(idString, pos)) != -1) {
+        pos += rx.matchedLength();      // move along in str
+        id[NumTS] = rx.cap(1).toInt();
+        ++NumTS;
       }
-      bFile.close();
       cout << "NumTS= " << NumTS << "\n";
     }
 
@@ -623,9 +542,9 @@ void timeSeriesDlg::plot()
 
     variableIndex = comboBoxRivVariable->currentIndex();
     if(variableIndex == 0)
-      TIME_STEP = TIME_STEP / (readLineNumber(qPrintable(projFile), 104)).toInt();
+      TIME_STEP = TIME_STEP / p->readNumEntry("pihm", "step3");               // 104
     else
-      TIME_STEP = TIME_STEP / (readLineNumber(qPrintable(projFile), 109)).toInt();
+      TIME_STEP = TIME_STEP / p->readNumEntry("pihm", "step8");               // 109
 
     fileName = lineEditFileName->text();
 
@@ -643,7 +562,7 @@ void timeSeriesDlg::plot()
       while( (pos = str.find('\t', pos+1)) != -1 ) {
         NUM_RIV++;
       }
-      cout<<"NumRiv= "<<NUM_RIV<<"\n";
+      qDebug("NumRiv= %d", NUM_RIV);
       inStream.seekg(0, ios::beg);
 
       while(getline(inStream, str, '\n'))
@@ -654,7 +573,7 @@ void timeSeriesDlg::plot()
       //inStream.open(qPrintable(fileName));
       NUM_STEPS = NUM_STEPS / TIME_STEP + 1;
 
-      cout<<"steps= "<<NUM_STEPS<<"\n";
+      qDebug("steps= %d",NUM_STEPS);
       for(int I=0; I<NumTS; I++) {
         ifstream inStream2; inStream2.open(qPrintable(fileName));
 
@@ -669,7 +588,7 @@ void timeSeriesDlg::plot()
         int tmpCount=0;
         if(METHOD == 1) {
           double temp;
-          while(inStream2) {
+          while(!inStream2.eof()) {
             tmpCount++;
             for(int i=0; i<NUM_RIV; i++) {
               inStream2 >> temp;
@@ -1026,5 +945,7 @@ void timeSeriesDlg::on_comboBoxRivFeature_currentIndexChanged(int index)
 
 void timeSeriesDlg::on_pushButtonClose_clicked()
 {
+//	plotts->close();
+//	delete plotts; // See plotTS() setAttribute(Qt::WA_DeleteOnClose)
   close();
 }

@@ -49,7 +49,7 @@ void simplify_Polyline(Point *poly, int start, int end, double tolerance, int *m
 void simplifyPolyline(Point *poly, int start, int end, double tolerance, int *marker){ //, int flag){ //
   // Flag accounts if the function is called for the first time.. 0=>first time; 1=>otherwise
   if (end < start+1)
-    return; // 0;
+    return;  // 0;
   //cout<<start<<"\t"<<end<<"\n";
   /*static int count=1;
   if(flag == 0)

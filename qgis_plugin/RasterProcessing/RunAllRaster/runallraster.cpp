@@ -1,6 +1,7 @@
 #include "runallraster.h"
 #include "ui_runallraster.h"
 
+#include <qgsproject.h>
 #include <iostream>
 
 #include <fstream>
@@ -15,7 +16,6 @@
 #include "../../pihmRasterLIBS/lsm.h"
 #include "../../pihmRasterLIBS/catPoly.h"
 
-#include "../../pihmLIBS/fileStruct.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
 #include <QtGui>
@@ -37,13 +37,8 @@ RunAllRaster::~RunAllRaster()
 
 void RunAllRaster::on_pushButtonDEM_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose DEM File", projDir, "DEM Grid File (*.adf *.asc)");
   ui->lineEditDEM->setText(str);
@@ -52,14 +47,8 @@ void RunAllRaster::on_pushButtonDEM_clicked()
 void RunAllRaster::on_pushButtonSuggestMe_clicked()
 {
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   cout<<qPrintable(projDir);
   //QString temp; temp="cd "+projDir+";" "mkdir RasterProcessing";
@@ -81,16 +70,26 @@ void RunAllRaster::on_pushButtonSuggestMe_clicked()
     inputAsciiFileName.append("asc");
     bin2ascii((char *)qPrintable(inputFileName), (char *)qPrintable(inputAsciiFileName));
   }
+
+  { // FIXME: move it to some function as it duplicates with fillpits.cpp
+    ifstream tempFile; tempFile.open(qPrintable(inputAsciiFileName));
+    char tempChar[100];
+    tempFile>>tempChar; tempFile>>tempChar; tempFile>>tempChar; tempFile>>tempChar;
+    tempFile>>tempChar; tempFile>>tempChar; tempFile>>tempChar; tempFile>>tempChar;
+    tempFile >> tempChar;
+    int tempDouble; tempFile >> tempDouble;
+    tempFile.close();
+    p->writeEntry("pihm", "res", tempDouble); // 100
+  }
   int err;
   err = flood((char *)qPrintable(inputAsciiFileName), "dummy", (char *)qPrintable(fill));
   err = setdird8((char *)qPrintable(fill), (char *)qPrintable(fdr), "dummy");
   err = aread8((char *)qPrintable(fdr), (char *)qPrintable(fac), 0.0, 0.0, 1);
 
-  writeLineNumber(qPrintable(projFile), 3, qPrintable(inputFileName));
-  writeLineNumber(qPrintable(projFile), 4, qPrintable(fill));
-  writeLineNumber(qPrintable(projFile), 5, qPrintable(fill));
-  writeLineNumber(qPrintable(projFile), 6, qPrintable(fdr));
-  writeLineNumber(qPrintable(projFile), 7, qPrintable(fac));
+  p->writeEntry("pihm", "dem", p->writePath(inputFileName)); // 3
+  p->writeEntry("pihm", "fill", p->writePath(fill)); // 4 & 5
+  p->writeEntry("pihm", "fdr", p->writePath(fdr)); // 6
+  p->writeEntry("pihm", "fac", p->writePath(fac)); // 7
 
   char tempChar[100];
   int tempInt, Rows, Cols, NoData, suggestedThreshold;
@@ -132,13 +131,8 @@ void RunAllRaster::on_pushButtonSuggestMe_clicked()
 
 void RunAllRaster::on_pushButtonStream_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getSaveFileName(this, "Save Stream File to...", projDir+"/RasterProcessing", "Shape file (*.shp)");
   if(!s.endsWith(".shp"))
@@ -148,13 +142,8 @@ void RunAllRaster::on_pushButtonStream_clicked()
 
 void RunAllRaster::on_pushButtonWatershed_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getSaveFileName(this, "Save Catchment File to...", projDir+"/RasterProcessing", "Shape file (*.shp)");
   if(!s.endsWith(".shp"))
@@ -165,14 +154,8 @@ void RunAllRaster::on_pushButtonWatershed_clicked()
 void RunAllRaster::on_pushButtonRun_clicked()
 {
   //QString projDir = "/Users/bhattgopal/Documents";
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString fill= projDir + "/RasterProcessing"+"/fill.asc";
   QString fdr = projDir + "/RasterProcessing"+"/fdr.asc";
@@ -214,20 +197,14 @@ void RunAllRaster::on_pushButtonRun_clicked()
   QFile::copy(catDbf, dbfFilec);
   QFile::copy(catShx, shxFilec);
 
-  writeLineNumber(qPrintable(projFile), 8, qPrintable(fac));
-  writeLineNumber(qPrintable(projFile), 9, qPrintable(str));
-  writeLineNumber(qPrintable(projFile), 10, qPrintable(ui->lineEditThreshold->text()));
-  writeLineNumber(qPrintable(projFile), 11, qPrintable(str));
-  writeLineNumber(qPrintable(projFile), 12, qPrintable(fdr));
-  writeLineNumber(qPrintable(projFile), 13, qPrintable(lnk));
-  writeLineNumber(qPrintable(projFile), 14, qPrintable(str));
-  writeLineNumber(qPrintable(projFile), 15, qPrintable(fdr));
-  writeLineNumber(qPrintable(projFile), 16, qPrintable(shpFiles));
-  writeLineNumber(qPrintable(projFile), 17, qPrintable(lnk));
-  writeLineNumber(qPrintable(projFile), 18, qPrintable(fdr));
-  writeLineNumber(qPrintable(projFile), 19, qPrintable(cat));
-  writeLineNumber(qPrintable(projFile), 20, qPrintable(cat));
-  writeLineNumber(qPrintable(projFile), 21, qPrintable(shpFilec));
+  p->writeEntry("pihm", "fac", p->writePath(fac));   // 8
+  p->writeEntry("pihm", "strgrid", p->writePath(str));   // 9, 11, 14
+  p->writeEntry("pihm", "facThreshold", ui->lineEditThreshold->text().toInt());   // 10
+  p->writeEntry("pihm", "fdr", p->writePath(fdr));   // 12, 15, 18
+  p->writeEntry("pihm", "lnk", p->writePath(lnk));   // 13, 17
+  p->writeEntry("pihm", "strline", p->writePath(shpFiles));   // 16
+  p->writeEntry("pihm", "catgrid", p->writePath(cat));   // 19, 20
+  p->writeEntry("pihm", "catpoly", p->writePath(shpFilec));   // 21
 
   if(ui->checkBoxRaster->isChecked() == 1) {
     applicationPointer->addRasterLayer(fill);
@@ -250,6 +227,7 @@ void RunAllRaster::on_pushButtonRun_clicked()
     QString provider2 = "OGR";
     applicationPointer->addVectorLayer(myFileNameQString2, myBaseNameQString2, "ogr");
   }
+  ui->textBrowser->setText("Done!");
 }
 
 void RunAllRaster::on_pushButtonClose_clicked()

@@ -18,6 +18,7 @@ DefineProject(QWidget *parent = 0);
 
 private:
 Ui::DefineProject *ui;
+QString folder;   ///< subfolder name
 
 private slots:
 void on_pushButtonSave_clicked();

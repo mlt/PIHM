@@ -2,9 +2,9 @@
 #include "simplifylinedialog.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 #include "../../pihmLIBS/simplifyPolySHP.h"
-#include "../../pihmLIBS/shapefil.h"
+#include <shapefil.h>
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <fstream>
 using namespace std;
@@ -25,20 +25,13 @@ simplifyLineDialogDlg::simplifyLineDialogDlg(QWidget *parent)
   labels << "Input Polylines" <<"Tolerance (m)" << "Output Polylines";
   inputOutputTable->setColumnLabels(labels);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString tempStr; tempStr=readLineNumber(qPrintable(projFile), 25);
-  QString tempThresh; tempThresh=readLineNumber(qPrintable(projFile), 100);
-  int tempThreshInt = 2*tempThresh.toInt();
-  tempThresh = QString::number(tempThreshInt, 10);
-  if(tempStr.length()>1) {
+  QString tempStr; tempStr=p->readPath(p->readEntry("pihm", "catline"));       // 25
+  int tempThreshInt = 2*p->readNumEntry("pihm", "res"); // 100
+  QString tempThresh = QString::number(tempThreshInt, 10);
+  if(!tempStr.isEmpty()) {
     int rows = inputOutputTable->numRows();
     inputOutputTable->insertRows(rows);
     Q3TableItem *tempItem;
@@ -51,11 +44,11 @@ simplifyLineDialogDlg::simplifyLineDialogDlg(QWidget *parent)
     inputOutputTable->setItem(rows, 2, tempItem);
   }
 
-  tempStr=readLineNumber(qPrintable(projFile), 16);
-  tempThresh=readLineNumber(qPrintable(projFile), 100);
+  tempStr=p->readPath(p->readEntry("pihm", "strline")); // 16
+  tempThresh=QString::number(p->readNumEntry("pihm", "res"));       // 100
   //int tempThreshInt = 2*tempThresh.toInt();
   //tempThresh = QString::number(tempThreshInt, 10);
-  if(tempStr.length()>1) {
+  if(!tempStr.isEmpty()) {
     int rows = inputOutputTable->numRows();
     inputOutputTable->insertRows(rows);
     Q3TableItem *tempItem;
@@ -73,20 +66,14 @@ simplifyLineDialogDlg::simplifyLineDialogDlg(QWidget *parent)
 
 void simplifyLineDialogDlg::inputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QStringList temp = QFileDialog::getOpenFileNames(this, "Choose File", projDir+"/VectorProcessing","Unsimplified Polyline File(*.shp *.SHP)");
   //QStringList shpFilesInputDialog::externalBoundsFiles = temp;
   //QString* str = new QString();
   QString str = "";
-  for(unsigned int i=0; i< temp.count(); i++)
+  for(int i=0; i< temp.count(); i++)
   {
     str.append(temp[i]);
     str.append(";");
@@ -154,22 +141,18 @@ void simplifyLineDialogDlg::editTolerance()
 
 void simplifyLineDialogDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  writeLineNumber(qPrintable(projFile), 26, qPrintable(inputOutputTable->text(0,0)));
-  writeLineNumber(qPrintable(projFile), 27, qPrintable(inputOutputTable->text(0,2)));
-  writeLineNumber(qPrintable(projFile), 28, qPrintable(inputOutputTable->text(0,1)));
+  p->writeEntry("pihm", "catline", p->writePath(inputOutputTable->text(0,0))); // 26
+  p->writeEntry("pihm", "catsimple", p->writePath(inputOutputTable->text(0,2))); // 27
+  // TODO: make use of lists
+  p->writeEntry("pihm", "cattol", inputOutputTable->text(0,1).toInt()); // 28
   if(inputOutputTable->numRows()>0) {
-    writeLineNumber(qPrintable(projFile), 29, qPrintable(inputOutputTable->text(1,0)));
-    writeLineNumber(qPrintable(projFile), 30, qPrintable(inputOutputTable->text(1,2)));
-    writeLineNumber(qPrintable(projFile), 31, qPrintable(inputOutputTable->text(1,1)));
+    p->writeEntry("pihm", "strline", p->writePath(inputOutputTable->text(1,0))); // 29
+    p->writeEntry("pihm", "strsimple", p->writePath(inputOutputTable->text(1,2))); // 30
+    // TODO: make use of lists
+    p->writeEntry("pihm", "strtol", inputOutputTable->text(1,1).toInt()); // 31
   }
 
   QDir dir = QDir::home();

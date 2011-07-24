@@ -15,7 +15,7 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-/*  $Id: plugin.h 6931 2007-05-06 02:40:33Z wonder $ */
+/*  $Id: pihmgis.h 283 2011-07-18 06:15:42Z mlt $ */
 /***************************************************************************
  *   QGIS Programming conventions:
  *
@@ -76,16 +76,12 @@ virtual ~PIHMgis();
 public slots:
 //! init the gui
 virtual void initGui();
-//! Show the dialog box
-void run();
 //! unload the plugin
 void unload();
 //! show the help document
 void help();
 
 void runDefineProject();
-void runOpenProject();
-void runCloseProject();
 void runImportProject();
 
 void runRunAllRaster();

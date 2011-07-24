@@ -4,7 +4,7 @@
 #include "../../pihmRasterLIBS/catPoly.h"
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <iostream>
 #include <fstream>
@@ -19,31 +19,18 @@ CatchmentPolygonDlg::CatchmentPolygonDlg(QWidget *parent)
   connect(helpButton, SIGNAL(clicked()), this, SLOT(help()));
   connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+  inputFileLineEdit->setText(p->readPath(p->readEntry("pihm", "catgrid"))); // 19
 
-  inputFileLineEdit->setText(readLineNumber(qPrintable(projFile), 19));
-
-  QString qstrThresh(readLineNumber(qPrintable(projFile), 10));
-  outputFileLineEdit->setText(projDir+"/RasterProcessing/cat"+ qstrThresh +".shp");
+  int Thresh(p->readNumEntry("pihm", "facThreshold"));
+  outputFileLineEdit->setText(projDir+"/RasterProcessing/cat"+ QString::number(Thresh) +".shp");
 }
 
 void CatchmentPolygonDlg::inputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/RasterProcessing","CatchmentGrid File(*.adf *.asc)");
   inputFileLineEdit->setText(str);
@@ -52,14 +39,8 @@ void CatchmentPolygonDlg::inputBrowse()
 
 void CatchmentPolygonDlg::outputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/RasterProcessing","Catchment Polygon File(*.shp)");
   QString tmp = temp;
@@ -74,17 +55,10 @@ void CatchmentPolygonDlg::outputBrowse()
 
 void CatchmentPolygonDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  writeLineNumber(qPrintable(projFile), 20, qPrintable(inputFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 21, qPrintable(outputFileLineEdit->text()));
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+  p->writeEntry("pihm", "catgrid", p->writePath(inputFileLineEdit->text())); // 20
+  p->writeEntry("pihm", "catpoly", p->writePath(outputFileLineEdit->text())); // 21
 
   QDir dir = QDir::home();
   QString home = dir.homePath();
@@ -171,7 +145,7 @@ void CatchmentPolygonDlg::run()
     QFile::copy(outputDbfFileName, dbfFile);
     QFile::copy(outputShxFileName, shxFile);
 
-    writeLineNumber(qPrintable(projFile), 21, qPrintable(shpFile));
+    p->writeEntry("pihm", "catpoly", shpFile); //21
 
     log.open(qPrintable(logFileName), ios::app);
     log<<" Done!</p>";
@@ -184,7 +158,7 @@ void CatchmentPolygonDlg::run()
       QFileInfo myFileInfo(myFileNameQString);
       QString myBaseNameQString = myFileInfo.baseName();
       QString provider = "OGR";
-      cout<<"\n"<<qPrintable(myFileNameQString)<<"\n"<<qPrintable(myBaseNameQString)<<"\n"<<qPrintable(provider)<<"\n";
+      cout<<"\n"<<myFileNameQString.ascii()<<"\n"<<myBaseNameQString.ascii()<<"\n"<<provider.ascii()<<"\n";
       //getchar(); getchar();
       applicationPointer->addVectorLayer(myFileNameQString, myBaseNameQString, "ogr");
       //QgsRasterLayer *tempLayer = new QgsRasterLayer("/backup/pihm/RasterProcessing/FillPits", "morgedem.asc");

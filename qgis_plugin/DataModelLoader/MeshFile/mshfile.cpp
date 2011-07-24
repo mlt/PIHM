@@ -9,7 +9,7 @@ using namespace std;
 #include "../../pihmLIBS/pickGridValue.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 mshFileDlg::mshFileDlg(QWidget *parent)
 {
@@ -27,35 +27,24 @@ mshFileDlg::mshFileDlg(QWidget *parent)
   bElevFileLineEdit->setShown(0);
   bElevFileButton->setShown(0);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  eleFileLineEdit->setText(readLineNumber(qPrintable(projFile), 46));
-  nodeFileLineEdit->setText(readLineNumber(qPrintable(projFile), 47));
-  rivFileLineEdit->setText(readLineNumber(qPrintable(projFile), 37));
-  QString tempStr = readLineNumber(qPrintable(projFile), 47);
+  eleFileLineEdit->setText(p->readPath(p->readEntry("pihm", "ele"))); // 46
+  nodeFileLineEdit->setText(p->readPath(p->readEntry("pihm", "node"))); // 47
+  rivFileLineEdit->setText(p->readPath(p->readEntry("pihm", "strsplit")));       // 37
+  QString tempStr = p->readPath(p->readEntry("pihm", "node")); // 47
   tempStr.truncate(tempStr.length()-4); tempStr.append("neigh");
   neighFileLineEdit->setText(tempStr);
   //sElevFileLineEdit->setText(readLineNumber(qPrintable(projFile), 3)); //adf
-  sElevFileLineEdit->setText(readLineNumber(qPrintable(projFile), 4)); //asc
+  sElevFileLineEdit->setText(p->readPath(p->readEntry("pihm", "fill"))); // 4 //asc
+  mshFileLineEdit->setText(p->readPath(p->readEntry("pihm", "/model/mesh")));
 }
 
 void mshFileDlg::eleBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/DomainDecomposition","ele File(*.ele *.ELE)");
   eleFileLineEdit->setText(str);
@@ -63,14 +52,8 @@ void mshFileDlg::eleBrowse()
 
 void mshFileDlg::nodeBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/DomainDecomposition","node File(*.node *.NODE)");
   nodeFileLineEdit->setText(str);
@@ -78,14 +61,8 @@ void mshFileDlg::nodeBrowse()
 
 void mshFileDlg::neighBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/DomainDecomposition","neigh File(*.neigh *.NEIGH)");
   neighFileLineEdit->setText(str);
@@ -93,14 +70,8 @@ void mshFileDlg::neighBrowse()
 
 void mshFileDlg::sEleBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"Surface Elev File(*.adf *.ADF *.asc *ASC)");
   sElevFileLineEdit->setText(str);
@@ -108,14 +79,8 @@ void mshFileDlg::sEleBrowse()
 
 void mshFileDlg::bEleBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"Bed Elev File(*.adf *.ADF *.asc *ASC)");
   bElevFileLineEdit->setText(str);
@@ -123,14 +88,8 @@ void mshFileDlg::bEleBrowse()
 
 void mshFileDlg::mshBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/DataModel","mesh File(*.mesh *.MESH)");
   QString tmp = temp;
@@ -143,20 +102,14 @@ void mshFileDlg::mshBrowse()
 
 void mshFileDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  writeLineNumber(qPrintable(projFile), 49, qPrintable(mshFileLineEdit->text()));
+  p->writeEntry("pihm", "/model/mesh", p->writePath(mshFileLineEdit->text())); // 49
   QString tempStr = mshFileLineEdit->text();
   tempStr.truncate(tempStr.length()-5);
   tempStr=tempStr.right(tempStr.length()-tempStr.lastIndexOf("/", -1)-1);
-  writeLineNumber(qPrintable(projFile), 50, qPrintable(tempStr));
+  p->writeEntry("pihm", "ID", p->writePath(tempStr)); // 50
 
   QDir dir = QDir::home();
   QString home = dir.homePath();

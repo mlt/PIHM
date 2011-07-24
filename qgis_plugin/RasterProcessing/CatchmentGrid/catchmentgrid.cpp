@@ -7,7 +7,7 @@
 #include "../../pihmRasterLIBS/catProcessing.h"
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <iostream>
 #include <fstream>
@@ -23,32 +23,19 @@ CatchmentGridDlg::CatchmentGridDlg(QWidget *parent)
   connect(helpButton, SIGNAL(clicked()), this, SLOT(help()));
   connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+  inputLNKFileLineEdit->setText(p->readPath(p->readEntry("pihm", "lnk")));
+  inputFDRFileLineEdit->setText(p->readPath(p->readEntry("pihm", "fdr")));
 
-  inputLNKFileLineEdit->setText(readLineNumber(qPrintable(projFile), 13));
-  inputFDRFileLineEdit->setText(readLineNumber(qPrintable(projFile), 15));
-
-  QString qstrThresh(readLineNumber(qPrintable(projFile), 10));
-  outputFileLineEdit->setText(projDir+"/RasterProcessing/cat"+ qstrThresh +".asc");
+  int Thresh(p->readNumEntry("pihm", "facThreshold"));
+  outputFileLineEdit->setText(projDir+"/RasterProcessing/cat"+ QString::number(Thresh) +".asc");
 }
 
 void CatchmentGridDlg::inputLNKBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/RasterProcessing","Link Grid File(*.adf *.asc)");
   inputLNKFileLineEdit->setText(str);
@@ -56,14 +43,8 @@ void CatchmentGridDlg::inputLNKBrowse()
 
 void CatchmentGridDlg::inputFDRBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/RasterProcessing","Flow Dir Grid File(*.adf *.asc)");
   inputFDRFileLineEdit->setText(str);
@@ -71,14 +52,8 @@ void CatchmentGridDlg::inputFDRBrowse()
 
 void CatchmentGridDlg::outputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/RasterProcessing","Catchment Grid File(*.adf *.asc)");
   QString tmp = temp;
@@ -93,18 +68,10 @@ void CatchmentGridDlg::outputBrowse()
 
 void CatchmentGridDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  writeLineNumber(qPrintable(projFile), 17, qPrintable(inputLNKFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 18, qPrintable(inputFDRFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 19, qPrintable(outputFileLineEdit->text()));
+  QgsProject *p = QgsProject::instance();
+  p->writeEntry("pihm", "lnk", p->writePath(inputLNKFileLineEdit->text())); // 17
+  p->writeEntry("pihm", "fdr", p->writePath(inputFDRFileLineEdit->text())); // 18
+  p->writeEntry("pihm", "catgrid", p->writePath(outputFileLineEdit->text())); // 19
 
   QDir dir = QDir::home();
   QString home = dir.homePath();

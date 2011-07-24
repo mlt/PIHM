@@ -4,7 +4,7 @@
 #include "../../pihmRasterLIBS/streamSegmentationShp.h"
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <iostream>
 #include <fstream>
@@ -20,32 +20,20 @@ StreamPolyLineDlg::StreamPolyLineDlg(QWidget *parent)
   connect(helpButton, SIGNAL(clicked()), this, SLOT(help()));
   connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  inputSTRFileLineEdit->setText(readLineNumber(qPrintable(projFile), 11));
-  inputFDRFileLineEdit->setText(readLineNumber(qPrintable(projFile), 6));
+  inputSTRFileLineEdit->setText(p->readPath(p->readEntry("pihm", "strgrid"))); // 11
+  inputFDRFileLineEdit->setText(p->readPath(p->readEntry("pihm", "fdr"))); // 6
 
-  QString qstrThresh(readLineNumber(qPrintable(projFile), 10));
-  outputFileLineEdit->setText(projDir+"/RasterProcessing/str"+qstrThresh+".shp");
+  int Thresh(p->readNumEntry("pihm", "facThreshold")); // 10
+  outputFileLineEdit->setText(projDir+"/RasterProcessing/str"+QString::number(Thresh)+".shp");
 }
 
 void StreamPolyLineDlg::inputSTRBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/RasterProcessing","Stream Grid File(*.adf *.asc)");
   inputSTRFileLineEdit->setText(str);
@@ -53,14 +41,8 @@ void StreamPolyLineDlg::inputSTRBrowse()
 
 void StreamPolyLineDlg::inputFDRBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/RasterProcessing","Flow Dir Grid File(*.adf *.asc)");
   inputFDRFileLineEdit->setText(str);
@@ -68,14 +50,8 @@ void StreamPolyLineDlg::inputFDRBrowse()
 
 void StreamPolyLineDlg::outputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/RasterProcessing","Stream PolyLine File(*.shp)");
   QString tmp = temp;
@@ -90,17 +66,12 @@ void StreamPolyLineDlg::outputBrowse()
 
 void StreamPolyLineDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-  writeLineNumber(qPrintable(projFile), 14, qPrintable(inputSTRFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 15, qPrintable(inputFDRFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 16, qPrintable(outputFileLineEdit->text()));
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+
+  p->writeEntry("pihm", "strgrid", p->writePath(inputSTRFileLineEdit->text())); //14
+  p->writeEntry("pihm", "fdr", p->writePath(inputFDRFileLineEdit->text())); //15
+  p->writeEntry("pihm", "strline", p->writePath(outputFileLineEdit->text())); //16
 
   QDir dir = QDir::home();
   QString home = dir.homePath();
@@ -206,7 +177,7 @@ void StreamPolyLineDlg::run()
     QFile::copy(outputShpFileName, shpFile);
     QFile::copy(outputDbfFileName, dbfFile);
     QFile::copy(outputShxFileName, shxFile);
-    writeLineNumber(qPrintable(projFile), 16, qPrintable(shpFile));
+    p->writeEntry("pihm", "strline", p->writePath(shpFile)); // 16
 
     log.open(qPrintable(logFileName), ios::app);
     log<<" Done!</p>";
@@ -220,7 +191,7 @@ void StreamPolyLineDlg::run()
       QFileInfo myFileInfo(myFileNameQString);
       QString myBaseNameQString = myFileInfo.baseName();
       QString provider = "OGR";
-      cout<<"\n"<<qPrintable(myFileNameQString)<<"\n"<<qPrintable(myBaseNameQString)<<"\n"<<qPrintable(provider)<<"\n";
+      cout<<"\n"<<myFileNameQString.ascii()<<"\n"<<myBaseNameQString.ascii()<<"\n"<<provider.ascii()<<"\n";
       //getchar(); getchar();
       applicationPointer->addVectorLayer(myFileNameQString, myBaseNameQString, "ogr");
       //QgsRasterLayer *tempLayer = new QgsRasterLayer("/backup/pihm/RasterProcessing/FillPits", "morgedem.asc");

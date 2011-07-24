@@ -2,9 +2,9 @@
 #include "splitlinedialog.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 #include "../../pihmLIBS/splitLineAtVertices.h"
-#include "../../pihmLIBS/shapefil.h"
+#include <shapefil.h>
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <fstream>
 using namespace std;
@@ -23,16 +23,10 @@ splitLineDialogDlg::splitLineDialogDlg(QWidget *parent)
   labels << "Input (simplified) Polylines" << "Output Split Lines";
   inputOutputTable->setColumnLabels(labels);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  QString tempStr; tempStr=readLineNumber(qPrintable(projFile), 27);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+  // TODO: worth trying p->readListEntry()
+  QString tempStr; tempStr=p->readPath(p->readEntry("pihm", "catsimple"));       // 27
   if(tempStr.length()>1) {
     int rows = inputOutputTable->numRows();
     inputOutputTable->insertRows(rows);
@@ -43,7 +37,7 @@ splitLineDialogDlg::splitLineDialogDlg(QWidget *parent)
     tempItem = new Q3TableItem(inputOutputTable, Q3TableItem::Always, tempStr);
     inputOutputTable->setItem(rows, 1, tempItem);
   }
-  tempStr; tempStr=readLineNumber(qPrintable(projFile), 30);
+  tempStr; tempStr=p->readPath(p->readEntry("pihm", "strsimple")); // 30
   if(tempStr.length()>1) {
     int rows = inputOutputTable->numRows();
     inputOutputTable->insertRows(rows);
@@ -58,14 +52,8 @@ splitLineDialogDlg::splitLineDialogDlg(QWidget *parent)
 
 void splitLineDialogDlg::addBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QStringList temp = QFileDialog::getOpenFileNames(this, "Choose File", projDir+"/VectorProcessing","Shape Files(*.shp *.SHP)");
   QString str = "";
@@ -119,20 +107,14 @@ void splitLineDialogDlg::removeAllBrowse()
 
 void splitLineDialogDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  writeLineNumber(qPrintable(projFile), 32, qPrintable(inputOutputTable->text(0,0)));
-  writeLineNumber(qPrintable(projFile), 33, qPrintable(inputOutputTable->text(0,1)));
+  p->writeEntry("pihm", "catsimple", p->writePath(inputOutputTable->text(0,0))); // 32
+  p->writeEntry("pihm", "catsplit", p->writePath(inputOutputTable->text(0,1))); // 33
   if(inputOutputTable->numRows()>0) {
-    writeLineNumber(qPrintable(projFile), 34, qPrintable(inputOutputTable->text(1,0)));
-    writeLineNumber(qPrintable(projFile), 35, qPrintable(inputOutputTable->text(1,1)));
+    p->writeEntry("pihm", "strsimple", p->writePath(inputOutputTable->text(1,0))); // 34
+    p->writeEntry("pihm", "strsplit", p->writePath(inputOutputTable->text(1,1))); // 35
   }
 
   QDir dir = QDir::home();

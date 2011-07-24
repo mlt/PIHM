@@ -62,12 +62,12 @@ int aread8(char *pfile,char *afile, double x, double y, int doall)
     {  for(j=nx/2; j<nx-1; j++)
          darea(i,j);
        for(j=nx/2-1; j>=1; j--)
-         darea(i,j);}
+         darea(i,j); }
     for(i=ny/2-1; i>=1; i--)
     {  for(j=nx/2; j<nx-1; j++)
          darea(i,j);
        for(j=nx/2-1; j>=1; j--)
-         darea(i,j);}
+         darea(i,j); }
   }
 /* write out areas */
   err=gridwrite(afile, (void **)arr,RPINTDTYPE,nx,ny,dx,dy,
@@ -102,7 +102,7 @@ void darea(int i, int j)
            if(arr[jn][in] < 0) con = -1;
            else arr[j][i]=arr[j][i]+arr[jn][in];
          }
-         if(dir[jn][in] < 0) con = -1;}
+         if(dir[jn][in] < 0) con = -1; }
       //Here: GOPAL commented next line
       //if(con == -1)arr[j][i]= -1;
     }

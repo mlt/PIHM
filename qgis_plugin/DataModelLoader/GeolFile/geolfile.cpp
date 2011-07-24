@@ -5,7 +5,7 @@
 #include <fstream>
 #include <math.h>
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
 using namespace std;
@@ -14,17 +14,17 @@ GeolFile::GeolFile(QWidget *parent)
   : QDialog(parent), ui(new Ui::GeolFile)
 {
   ui->setupUi(this);
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
 
-  QString tempStr=readLineNumber(qPrintable(projFile), 49); tempStr.truncate(tempStr.length()-4);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+
+  QString tempStr=p->readPath(p->readEntry("pihm", "/model/mesh")); // 49
+  tempStr.truncate(tempStr.length()-4);
   ui->lineEditGeolFile->setText(tempStr+"geol");
+
+  tempStr = p->readEntry("pihm", "geol");
+  if (!tempStr.isEmpty())
+    ui->lineEditGeolTexture->setText(p->readPath(tempStr));  // 89
 }
 
 GeolFile::~GeolFile()
@@ -39,14 +39,8 @@ void GeolFile::on_pushButtonClose_clicked()
 
 void GeolFile::on_pushButtonGeolTexture_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getOpenFileName(this, "Choose Geol Texture File", projDir, "Texture (*.txt *.TXT)");
   ui->lineEditGeolTexture->setText(s);
@@ -54,14 +48,8 @@ void GeolFile::on_pushButtonGeolTexture_clicked()
 
 void GeolFile::on_pushButtonGeolFile_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getSaveFileName(this, "Choose .GEOL File Name", projDir+"/DataModel", "GEOL file (*.geol)");
   if(!s.endsWith(".geol"))
@@ -71,17 +59,11 @@ void GeolFile::on_pushButtonGeolFile_clicked()
 
 void GeolFile::on_pushButtonRun_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  writeLineNumber(qPrintable(projFile), 89, qPrintable(ui->lineEditGeolTexture->text()));
-  writeLineNumber(qPrintable(projFile), 90, qPrintable(ui->lineEditGeolFile->text()));
+  p->writeEntry("pihm", "geol", p->writePath(ui->lineEditGeolTexture->text())); // 89
+  p->writeEntry("pihm", "/model/geol", p->writePath(ui->lineEditGeolFile->text())); // 90
 
   int RunFlag=1;
   ifstream inFile;

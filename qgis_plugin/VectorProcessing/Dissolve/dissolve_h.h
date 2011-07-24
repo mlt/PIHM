@@ -140,8 +140,8 @@ void dissolve(const char* shpFileName, const char* dbfFileName, const char *news
       for(int j=0; j<numLines[i]; j++) {
         for(int l=0; l<numLines[k]; l++) {
           //if(compareLines(&(lines[i][j]), &(lines[k][l]))!=1){
-          if(lines[i][j].x1>lines[i][j].x2) {minX=lines[i][j].x2; maxX=lines[i][j].x1;}else{minX=lines[i][j].x1; maxX=lines[i][j].x2;}
-          if(lines[i][j].y1>lines[i][j].y2) {minY=lines[i][j].y2; maxY=lines[i][j].y1;}else{minY=lines[i][j].y1; maxY=lines[i][j].y2;}
+          if(lines[i][j].x1>lines[i][j].x2) {minX=lines[i][j].x2; maxX=lines[i][j].x1; }else{minX=lines[i][j].x1; maxX=lines[i][j].x2; }
+          if(lines[i][j].y1>lines[i][j].y2) {minY=lines[i][j].y2; maxY=lines[i][j].y1; }else{minY=lines[i][j].y1; maxY=lines[i][j].y2; }
 
           if(lines[k][l].x1>=minX && lines[k][l].x1<=maxX && lines[k][l].y1>=minY && lines[k][l].y1<=maxY) {
             //if(lines[k][l].x1>dfXMin[i] && lines[k][l].x1<dfXMax[i] && lines[k][l].y1>dfYMin[i] && lines[k][l].y1<dfYMax[i]){
@@ -172,8 +172,8 @@ void dissolve(const char* shpFileName, const char* dbfFileName, const char *news
             }
           }
 
-          if(lines[k][l].x1>lines[k][l].x2) {minX=lines[k][l].x2; maxX=lines[k][l].x1;}else{minX=lines[k][l].x1; maxX=lines[k][l].x2;}
-          if(lines[k][l].y1>lines[k][l].y2) {minY=lines[k][l].y2; maxY=lines[k][l].y1;}else{minY=lines[k][l].y1; maxY=lines[k][l].y2;}
+          if(lines[k][l].x1>lines[k][l].x2) {minX=lines[k][l].x2; maxX=lines[k][l].x1; }else{minX=lines[k][l].x1; maxX=lines[k][l].x2; }
+          if(lines[k][l].y1>lines[k][l].y2) {minY=lines[k][l].y2; maxY=lines[k][l].y1; }else{minY=lines[k][l].y1; maxY=lines[k][l].y2; }
 
           if(lines[i][j].x1>=minX && lines[i][j].x1<=maxX && lines[i][j].y1>=minY && lines[i][j].y1<=maxY) {
             //if(lines[i][j].x1>dfXMin[k] && lines[i][j].x1<dfXMax[k] && lines[i][j].y1>dfYMin[k] && lines[i][j].y1<dfYMax[k]){
@@ -285,7 +285,7 @@ void dissolve(const char* shpFileName, const char* dbfFileName, const char *news
           Z[numPoints]=0.0;
           numPoints++;
           currentline=i;
-          if(i==0) {finished=0; numPoints--;} else finished=1;
+          if(i==0) {finished=0; numPoints--; } else finished=1;
           //cout<<numPoints<<"\n";
           //cout<<"break\n";
           break;
@@ -299,7 +299,7 @@ void dissolve(const char* shpFileName, const char* dbfFileName, const char *news
           Z[numPoints]=0.0;
           numPoints++;
           currentline=i;
-          if(i==0) {finished=0; numPoints--;} else finished=1;
+          if(i==0) {finished=0; numPoints--; } else finished=1;
           //cout<<numPoints<<"\n";
           //cout<<"break\n";
           break;

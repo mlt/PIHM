@@ -2,7 +2,6 @@
 #include <qwt_plot.h>
 #include <qwt_plot_marker.h>
 #include <qwt_plot_curve.h>
-#include <qwt_legend.h>
 #include <qwt_text.h>
 #include <math.h>
 #include <qdialog.h>
@@ -20,44 +19,52 @@ public:
 */
 
 PlotTS::PlotTS(const char *plotTitle, const char *xTitle, const char *yTitle, char **legend, double **xVal, double **yVal, int nPts, int NumTS)
+  : _legend(legend),
+  _xVal(xVal), _yVal(yVal), _nPts(nPts), _NumTS(NumTS)
 {
+//	setAttribute(Qt::WA_DeleteOnClose);
+
   //qWarning("class\n");
   QColor color(255, 255, 255);
   setCanvasBackground(color);
   setTitle(plotTitle);
-  insertLegend(new QwtLegend(), QwtPlot::RightLegend);
+  insertLegend(&theLegend, QwtPlot::RightLegend);
 
   // Set axis titles
   setAxisTitle(xBottom, xTitle);
   setAxisTitle(yLeft, yTitle);
 
   // Insert new curves
-  QwtPlotCurve **cSin; int* lineColor; QColor* qColor;
-  cSin = (QwtPlotCurve **)malloc(NumTS*sizeof(QwtPlotCurve *));
-  lineColor = (int *)malloc(NumTS*sizeof(int));
-  qColor = (QColor *)malloc(NumTS*sizeof(QColor));
+//	cSin = new QwtPlotCurve[NumTS];
+//	lineColor = new int[NumTS];
+//	qColor = new QColor[NumTS];
+//	cSin = (QwtPlotCurve **)malloc(NumTS*sizeof(QwtPlotCurve *));
+//	lineColor = (int *)malloc(NumTS*sizeof(int));
+//	qColor = (QColor *)malloc(NumTS*sizeof(QColor));
   for (int i=0; i<NumTS; i++) {
-    cSin[i] = new QwtPlotCurve(legend[i]);
+    QwtPlotCurve* cSin = new QwtPlotCurve(); //legend[i]);
+    cSin->setTitle(legend[i]);
 #if QT_VERSION >= 0x040000
-    cSin[i]->setRenderHint(QwtPlotItem::RenderAntialiased);
+    cSin->setRenderHint(QwtPlotItem::RenderAntialiased);
 #endif
     //getchar(); getchar();
-    lineColor[i] = qrand() % 17 + 2;
-    qColor[i] = QColor::fromRgb((int) qrand()%255, (int) qrand()%255, (int) qrand()%255, 255);
+    int lineColor = qrand() % 17 + 2;
+    QColor qColor = QColor::fromRgb((int) qrand()%255, (int) qrand()%255, (int) qrand()%255, 255);
 
-    cout << "color = " << lineColor[i] << "\n";
+    cout << "color = " << lineColor << "\n";
     //cSin[i]->setPen(QPen(QColor(lineColor[i])));
-    cSin[i]->setPen(QPen(qColor[i]));
+    cSin->setPen(QPen(qColor));
     //cSin[i]->setPen(QPen(qrand() % 17 + 2));
-    cSin[i]->attach(this);
-
+    cSin->setData(xVal[i], yVal[i], nPts);
+    cSin->attach(this);
+//		cSin->detach();
     // Create sin and cos data
     //const int nPoints = 100;
     //cSin->setData(SimpleData(::sin, nPoints));
     //cCos->setData(SimpleData(::cos, nPoints));
 
-    cSin[i]->setData(xVal[i], yVal[i], nPts);
   }
+
   // Insert markers
   /*
    //  ...a horizontal line at y = 0...
@@ -79,17 +86,20 @@ PlotTS::PlotTS(const char *plotTitle, const char *xTitle, const char *yTitle, ch
   //parent->show();
   //qWarning("Done\n");
 }
-/*
-int main(int argc, char **argv)
-{
-    QApplication a(argc, argv);
 
-    Plot plot;
-#if QT_VERSION < 0x040000
-    a.setMainWidget(&plot);
-#endif
-    plot.resize(600,400);
-    plot.show();
-    return a.exec();
+//PlotTS::~PlotTS() {
+/*
+for (int i=0; i<_NumTS; i++) {
+//		cSin[i].detach();
+  free(_xVal[i]);
+  free(_yVal[i]);
+  free(_legend[i]);
 }
+//    delete[] cSin;
+delete[] lineColor;
+delete[] qColor;
+free(_legend);
+  free(_xVal);
+  free(_yVal);
 */
+//}

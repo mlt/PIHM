@@ -2,9 +2,9 @@
 #include "mergefeaturesdialog.h"
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 #include "../../pihmLIBS/mergeFeatures.h"
-#include "../../pihmLIBS/shapefil.h"
+#include <shapefil.h>
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <fstream>
 using namespace std;
@@ -26,16 +26,10 @@ mergeFeaturesDialogDlg::mergeFeaturesDialogDlg(QWidget *parent)
   labels << "Split Line Features (Constraining layer)";
   inputOutputTable->setColumnLabels(labels);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString tempStr; tempStr=readLineNumber(qPrintable(projFile), 33);
+  QString tempStr; tempStr=p->readPath(p->readEntry("pihm", "catsplit")); // 33
   if(tempStr.length()>1) {
     int rows = inputOutputTable->numRows();
     inputOutputTable->insertRows(rows);
@@ -43,7 +37,7 @@ mergeFeaturesDialogDlg::mergeFeaturesDialogDlg(QWidget *parent)
     tempItem = new Q3TableItem(inputOutputTable, Q3TableItem::Always, tempStr);
     inputOutputTable->setItem(rows, 0, tempItem);
   }
-  tempStr=readLineNumber(qPrintable(projFile), 35);
+  tempStr=p->readPath(p->readEntry("pihm", "strsplit")); // 35
   if(tempStr.length()>1) {
     int rows = inputOutputTable->numRows();
     inputOutputTable->insertRows(rows);
@@ -56,24 +50,16 @@ mergeFeaturesDialogDlg::mergeFeaturesDialogDlg(QWidget *parent)
 
 void mergeFeaturesDialogDlg::addBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QStringList temp = QFileDialog::getOpenFileNames(this, "Choose File", projDir+"/VectorProcessing","Shape Files(*.shp *.SHP)");
   QString str = "";
   //QString str1 = "";
 
-  unsigned int i;
-
   int rows = inputOutputTable->numRows();
 
-  for(i=0; i< temp.count(); i++)
+  for(int i=0; i< temp.count(); i++)
   {
     //std::cout<<"\n"<<temp[i].ascii();
     str = temp[i];
@@ -116,14 +102,8 @@ void mergeFeaturesDialogDlg::removeAllBrowse()
 
 void mergeFeaturesDialogDlg::outputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/VectorProcessing","Shape File(*.shp *.SHP)");
   QString tmp = temp;
@@ -136,27 +116,21 @@ void mergeFeaturesDialogDlg::outputBrowse()
 
 void mergeFeaturesDialogDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  writeLineNumber(qPrintable(projFile), 36, qPrintable(inputOutputTable->text(0,0)));
+  p->writeEntry("pihm", "catsplit", p->writePath(inputOutputTable->text(0,0))); // 36
   if(inputOutputTable->numRows()>0) {
-    writeLineNumber(qPrintable(projFile), 37, qPrintable(inputOutputTable->text(1,0)));
+    p->writeEntry("pihm", "strsplit", p->writePath(inputOutputTable->text(1,0)));   // 37
   }
-  writeLineNumber(qPrintable(projFile), 38, qPrintable(outputMergedFileLineEdit->text()));
+  p->writeEntry("pihm", "merge", p->writePath(outputMergedFileLineEdit->text())); // 38
   //writeLineNumber(qPrintable(projFile), 39, qPrintable(projDir+"/DomainDecomposition/"+id+".shp"));
 
   QDir dir = QDir::home();
   QString home = dir.homePath();
   QString logFileName(qPrintable(home+"/log.html"));
   ofstream log;
-  log.open(qPrintable(logFileName));
+  log.open(logFileName.ascii());
   log<<"<html><body><font size=3 color=black><p> Verifying Files...</p></font></body></html>";
   log.close();
   messageLog->setSource(logFileName);
@@ -177,7 +151,7 @@ void mergeFeaturesDialogDlg::run()
   //double tol;
   int runFlag = 1;
   if(inputOutputTable->numRows() < 2) {
-    log.open(qPrintable(logFileName), ios::app);
+    log.open(logFileName.ascii(), ios::app);
     log<<"<p><font size=3 color=red> First Please input Files</p>";
     log.close();
     messageLog->reload();
@@ -191,12 +165,12 @@ void mergeFeaturesDialogDlg::run()
       dbfFileName.append("dbf");
 
       ifstream file;
-      file.open(qPrintable(shpFileName), ios::in);
-      log.open(qPrintable(logFileName), ios::app);
+      file.open(shpFileName.ascii(), ios::in);
+      log.open(logFileName.ascii(), ios::app);
 
-      qWarning("\n %s", qPrintable(shpFileName));
+      qWarning("\n %s", shpFileName.ascii());
 
-      log<<"<p>Checking... "<<qPrintable(shpFileName)<<"... ";
+      log<<"<p>Checking... "<<shpFileName.ascii()<<"... ";
       if(file == NULL) {
         log<<"<font size=3 color=red> Error!</p>";
         runFlag = 0;
@@ -205,8 +179,8 @@ void mergeFeaturesDialogDlg::run()
         log<<"Done!</p>";
         shpFileNamesChar[fileCount] = new char[200];
         dbfFileNamesChar[fileCount] = new char[200];
-        shpFileNamesChar[fileCount] = qPrintable(shpFileName);
-        dbfFileNamesChar[fileCount] = qPrintable(dbfFileName);
+        shpFileNamesChar[fileCount] = shpFileName.ascii();
+        dbfFileNamesChar[fileCount] = dbfFileName.ascii();
 
         shpFileNames[fileCount] = shpFileName; //.ascii();
         dbfFileNames[fileCount] = dbfFileName;
@@ -219,16 +193,16 @@ void mergeFeaturesDialogDlg::run()
   }
 
   ofstream out;
-  out.open(qPrintable(outputMergedFileLineEdit->text()));
+  out.open((outputMergedFileLineEdit->text()).ascii());
 
-  log.open(qPrintable(logFileName), ios::app);
+  log.open(logFileName.ascii(), ios::app);
   if((outputMergedFileLineEdit->text()).length()==0) {
     runFlag = 0;
     log<<"<p><font size=3 color=red> Error! Please input Merge Output File</p>";
     qWarning("\nPlease enter output file name");
   }
   else{
-    log<<"<p>Checking... "<< qPrintable(outputMergedFileLineEdit->text())<<"... ";
+    log<<"<p>Checking... "<<(outputMergedFileLineEdit->text()).ascii()<<"... ";
     if(out == NULL) {
       log<<"<font size=3 color=red> Error!</p>";
       //qWarning("\n%s doesn't exist!", (inputFileLineEdit->text()).ascii());
@@ -249,7 +223,7 @@ void mergeFeaturesDialogDlg::run()
     shxFileNameMerge=dbfFileNameMerge;
     dbfFileNameMerge.append("dbf");
 
-    log.open(qPrintable(logFileName), ios::app);
+    log.open(logFileName.ascii(), ios::app);
     log<<"<p>Running...";
     log.close();
     messageLog->reload();
@@ -257,7 +231,7 @@ void mergeFeaturesDialogDlg::run()
 
 
 
-    mergeFeatures(shpFileNamesChar, dbfFileNamesChar, fileCount, qPrintable(shpFileNameMerge), qPrintable(dbfFileNameMerge));
+    mergeFeatures(shpFileNamesChar, dbfFileNamesChar, fileCount, shpFileNameMerge.ascii(), dbfFileNameMerge.ascii());
 
     QString myFileNameQString = shpFileNameMerge;
     QFileInfo myFileInfo(myFileNameQString);
@@ -279,9 +253,9 @@ void mergeFeaturesDialogDlg::run()
     QFile::copy(dbfFileNameMerge, dbfFile);
     QFile::copy(shxFileNameMerge, shxFile);
 
-    writeLineNumber(qPrintable(projFile), 39, qPrintable(shpFile));
+    p->writeEntry("pihm", "merge", p->writePath(shpFile)); // 39
 
-    log.open(qPrintable(logFileName), ios::app);
+    log.open(logFileName.ascii(), ios::app);
     log<<" Done!</p>";
     log.close();
     messageLog->reload();

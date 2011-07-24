@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "lsm.h"
-#include "./../pihmLIBS/shapefil.h"
+#include <shapefil.h>
 
 #define dist(x1, x2) fabs(x1-x2)
 #define direction(l1, l2) (fabs(atan(fabs((l1.y2 - l1.y1)/(l1.x2 - l1.x1))) - atan(fabs(( l2.y2 - l2.y1)/(l2.x2 - l2.x1))))<0.001) ? 0 : 1;
@@ -34,7 +34,7 @@ int catchmentPoly(char *catFile, char *nodeFile, char *shpFile, char *dbfFile){
   int numLine=0;
   int *linesInClass;
 
-  int lineDirFlag;
+  int lineDirFlag = 0;
 
 
   int startPivot, endPivot, classNum, point[2], count;

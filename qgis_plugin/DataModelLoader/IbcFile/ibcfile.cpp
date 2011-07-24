@@ -4,7 +4,7 @@
 #include <fstream>
 #include <QFileDialog>
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
 using namespace std;
@@ -14,16 +14,11 @@ IbcFile::IbcFile(QWidget *parent)
 {
   ui->setupUi(this);
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString tempStr=readLineNumber(qPrintable(projFile), 49); tempStr.truncate(tempStr.length()-4);
+  QString tempStr=p->readPath(p->readEntry("pihm", "/model/mesh")); // 49
+  tempStr.truncate(tempStr.length()-4);
   ui->lineEdit->setText(tempStr+"ibc");
 }
 
@@ -34,14 +29,8 @@ IbcFile::~IbcFile()
 
 void IbcFile::on_pushButtonBrowse_clicked()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString s = QFileDialog::getSaveFileName(this, "Choose IBC File Name", projDir+"/DataModel", "IBC file (*.ibc)");
   if(!s.endsWith(".ibc"))

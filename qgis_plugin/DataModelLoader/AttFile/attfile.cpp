@@ -6,10 +6,10 @@
 using namespace std;
 
 #include "../../pihmLIBS/pickGridValue.h"
-#include "../../pihmLIBS/shapefil.h"
+#include <shapefil.h>
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 attFileDlg::attFileDlg(QWidget *parent)
 {
@@ -40,49 +40,77 @@ attFileDlg::attFileDlg(QWidget *parent)
   connect(helpButton, SIGNAL(clicked()), this, SLOT(help()));
   connect(cancelButton, SIGNAL(clicked()), this, SLOT(close()));
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  TINLineEdit->setText(readLineNumber(qPrintable(projFile), 48));
-  QString tempStr; tempStr=readLineNumber(qPrintable(projFile), 49); tempStr.truncate(tempStr.length()-4);
+  QgsProject *p = QgsProject::instance();
+  TINLineEdit->setText(p->readPath(p->readEntry("pihm", "TIN")));
+  QString tempStr = p->readPath(p->readEntry("pihm", "/model/mesh")); // 49
+  tempStr.truncate(tempStr.length()-4);
   attFileLineEdit->setText(tempStr+"att");
-  PrecipLineEdit->setText(readLineNumber(qPrintable(projFile), 54));
-  TempLineEdit->setText(readLineNumber(qPrintable(projFile), 55));
-  HumidLineEdit->setText(readLineNumber(qPrintable(projFile), 56));
-  WindLineEdit->setText(readLineNumber(qPrintable(projFile), 57));
-  GLineEdit->setText(readLineNumber(qPrintable(projFile), 58));
-  RnLineEdit->setText(readLineNumber(qPrintable(projFile), 59));
-  PLineEdit->setText(readLineNumber(qPrintable(projFile), 60));
-  SoilLineEdit->setText(readLineNumber(qPrintable(projFile), 61));
-  GeolLineEdit->setText(readLineNumber(qPrintable(projFile), 62));
-  LCLineEdit->setText(readLineNumber(qPrintable(projFile), 63));
-  MFLineEdit->setText(readLineNumber(qPrintable(projFile), 64));
-  MPLineEdit->setText(readLineNumber(qPrintable(projFile), 65));
-  ISICLineEdit->setText(readLineNumber(qPrintable(projFile), 66));
-  SnowICLineEdit->setText(readLineNumber(qPrintable(projFile), 67));
-  OverlandICLineEdit->setText(readLineNumber(qPrintable(projFile), 68));
-  UnSatICLineEdit->setText(readLineNumber(qPrintable(projFile), 69));
-  SatICLineEdit->setText(readLineNumber(qPrintable(projFile), 70));
-  BCLineEdit->setText(readLineNumber(qPrintable(projFile), 71));
-  SourceLineEdit->setText(readLineNumber(qPrintable(projFile), 72));
+
+  QString tmp;
+  bool ok;
+  tmp = p->readPath(p->readEntry("pihm", "Precip", QString::null, &ok));
+  if (ok)
+    PrecipLineEdit->setText(tmp);  //54
+  tmp = p->readPath(p->readEntry("pihm", "Temp", QString::null, &ok)); // 55
+  if (ok)
+    TempLineEdit->setText(tmp);
+  tmp = p->readPath(p->readEntry("pihm", "Humid", QString::null, &ok));
+  if (ok)
+    HumidLineEdit->setText(tmp);  //56
+  tmp = p->readPath(p->readEntry("pihm", "Wind", QString::null, &ok));
+  if (ok)
+    WindLineEdit->setText(tmp);  //56
+  tmp = p->readPath(p->readEntry("pihm", "G", QString::null, &ok));
+  if (ok)
+    GLineEdit->setText(tmp);  //58
+  tmp = p->readPath(p->readEntry("pihm", "Rn", QString::null, &ok));
+  if (ok)
+    RnLineEdit->setText(tmp);  //59
+  tmp = p->readPath(p->readEntry("pihm", "P", QString::null, &ok));
+  if (ok)
+    PLineEdit->setText(tmp);  // 60
+  tmp = p->readPath(p->readEntry("pihm", "Soil", QString::null, &ok));
+  if (ok)
+    SoilLineEdit->setText(tmp);  // 61
+  tmp = p->readPath(p->readEntry("pihm", "Geol", QString::null, &ok));
+  if (ok)
+    GeolLineEdit->setText(tmp);  // 62
+  tmp = p->readPath(p->readEntry("pihm", "LC", QString::null, &ok));
+  if (ok)
+    LCLineEdit->setText(tmp);  // 63
+  tmp = p->readPath(p->readEntry("pihm", "MF", QString::null, &ok));
+  if (ok)
+    MFLineEdit->setText(tmp);  //64
+  tmp = p->readPath(p->readEntry("pihm", "MP", QString::null, &ok));
+  if (ok)
+    MPLineEdit->setText(tmp);  // 65
+  tmp = p->readPath(p->readEntry("pihm", "ISIC", QString::null, &ok));
+  if (ok)
+    ISICLineEdit->setText(tmp);  // 66
+  tmp = p->readPath(p->readEntry("pihm", "SnowIC", QString::null, &ok));
+  if (ok)
+    SnowICLineEdit->setText(tmp);  // 67
+  tmp = p->readPath(p->readEntry("pihm", "OverlandIC", QString::null, &ok));
+  if (ok)
+    OverlandICLineEdit->setText(tmp);  //68
+  tmp = p->readPath(p->readEntry("pihm", "UnSatIC", QString::null, &ok));
+  if (ok)
+    UnSatICLineEdit->setText(tmp);  //69
+  tmp = p->readPath(p->readEntry("pihm", "SatIC", QString::null, &ok));
+  if (ok)
+    SatICLineEdit->setText(tmp);  // 70
+  tmp = p->readPath(p->readEntry("pihm", "BC", QString::null, &ok));
+  if (ok)
+    BCLineEdit->setText(tmp);  // 71
+  tmp = p->readPath(p->readEntry("pihm", "Source", QString::null, &ok));
+  if (ok)
+    SourceLineEdit->setText(tmp);  // 72
 }
 
 void attFileDlg::tinBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/DomainDecomposition","Shape File(*.shp *.SHP)");
   TINLineEdit->setText(str);
@@ -90,14 +118,8 @@ void attFileDlg::tinBrowse()
 
 void attFileDlg::precipBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   PrecipLineEdit->setText(str);
@@ -105,14 +127,8 @@ void attFileDlg::precipBrowse()
 
 void attFileDlg::tempBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   TempLineEdit->setText(str);
@@ -120,14 +136,8 @@ void attFileDlg::tempBrowse()
 
 void attFileDlg::humidBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   HumidLineEdit->setText(str);
@@ -135,14 +145,8 @@ void attFileDlg::humidBrowse()
 
 void attFileDlg::windBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   WindLineEdit->setText(str);
@@ -150,14 +154,8 @@ void attFileDlg::windBrowse()
 
 void attFileDlg::gBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   GLineEdit->setText(str);
@@ -165,14 +163,8 @@ void attFileDlg::gBrowse()
 
 void attFileDlg::rnBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   RnLineEdit->setText(str);
@@ -181,14 +173,8 @@ void attFileDlg::rnBrowse()
 
 void attFileDlg::pBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   PLineEdit->setText(str);
@@ -196,14 +182,8 @@ void attFileDlg::pBrowse()
 
 void attFileDlg::soilBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   SoilLineEdit->setText(str);
@@ -211,14 +191,8 @@ void attFileDlg::soilBrowse()
 
 void attFileDlg::geolBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   GeolLineEdit->setText(str);
@@ -226,14 +200,8 @@ void attFileDlg::geolBrowse()
 
 void attFileDlg::mfBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   MFLineEdit->setText(str);
@@ -242,14 +210,8 @@ void attFileDlg::mfBrowse()
 
 void attFileDlg::mpBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   MPLineEdit->setText(str);
@@ -257,14 +219,8 @@ void attFileDlg::mpBrowse()
 
 void attFileDlg::lcBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   LCLineEdit->setText(str);
@@ -272,14 +228,8 @@ void attFileDlg::lcBrowse()
 
 void attFileDlg::isICBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   ISICLineEdit->setText(str);
@@ -287,14 +237,8 @@ void attFileDlg::isICBrowse()
 
 void attFileDlg::snowICBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   SnowICLineEdit->setText(str);
@@ -302,14 +246,8 @@ void attFileDlg::snowICBrowse()
 
 void attFileDlg::overlandICBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   OverlandICLineEdit->setText(str);
@@ -317,14 +255,8 @@ void attFileDlg::overlandICBrowse()
 
 void attFileDlg::unsatICBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   UnSatICLineEdit->setText(str);
@@ -332,14 +264,8 @@ void attFileDlg::unsatICBrowse()
 
 void attFileDlg::satICBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   SatICLineEdit->setText(str);
@@ -347,14 +273,8 @@ void attFileDlg::satICBrowse()
 
 void attFileDlg::bcBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   BCLineEdit->setText(str);
@@ -362,14 +282,8 @@ void attFileDlg::bcBrowse()
 
 void attFileDlg::sourceBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
   SourceLineEdit->setText(str);
@@ -377,14 +291,8 @@ void attFileDlg::sourceBrowse()
 
 void attFileDlg::attBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString temp = QFileDialog::getSaveFileName(this, "Choose File", projDir+"/DataModel","att File(*.att *.ATT)");
   QString tmp = temp;
@@ -397,35 +305,27 @@ void attFileDlg::attBrowse()
 
 void attFileDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-
-  writeLineNumber(qPrintable(projFile), 54, qPrintable(PrecipLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 55, qPrintable(TempLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 56, qPrintable(HumidLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 57, qPrintable(WindLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 58, qPrintable(GLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 59, qPrintable(RnLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 60, qPrintable(PLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 61, qPrintable(SoilLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 62, qPrintable(GeolLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 63, qPrintable(LCLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 64, qPrintable(MFLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 65, qPrintable(MPLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 66, qPrintable(ISICLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 67, qPrintable(SnowICLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 68, qPrintable(OverlandICLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 69, qPrintable(UnSatICLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 70, qPrintable(SatICLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 71, qPrintable(BCLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 72, qPrintable(SourceLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 74, qPrintable(attFileLineEdit->text()));
+  QgsProject *p = QgsProject::instance();
+  p->writeEntry("pihm", "Precip", p->writePath(PrecipLineEdit->text()));
+  p->writeEntry("pihm", "Temp", p->writePath(TempLineEdit->text()));
+  p->writeEntry("pihm", "Humid", p->writePath(HumidLineEdit->text()));
+  p->writeEntry("pihm", "Wind", p->writePath(WindLineEdit->text()));
+  p->writeEntry("pihm", "G", p->writePath(GLineEdit->text()));
+  p->writeEntry("pihm", "Rn", p->writePath(RnLineEdit->text()));
+  p->writeEntry("pihm", "P", p->writePath(PLineEdit->text()));
+  p->writeEntry("pihm", "Soil", p->writePath(SoilLineEdit->text()));
+  p->writeEntry("pihm", "Geol", p->writePath(GeolLineEdit->text()));
+  p->writeEntry("pihm", "LC", p->writePath(LCLineEdit->text()));
+  p->writeEntry("pihm", "MF", p->writePath(MFLineEdit->text()));
+  p->writeEntry("pihm", "MP", p->writePath(MPLineEdit->text()));
+  p->writeEntry("pihm", "ISIC", p->writePath(ISICLineEdit->text()));
+  p->writeEntry("pihm", "SnowIC", p->writePath(SnowICLineEdit->text()));
+  p->writeEntry("pihm", "OverlandIC", p->writePath(OverlandICLineEdit->text()));
+  p->writeEntry("pihm", "UnSatIC", p->writePath(UnSatICLineEdit->text()));
+  p->writeEntry("pihm", "SatIC", p->writePath(SatICLineEdit->text()));
+  p->writeEntry("pihm", "BC", p->writePath(BCLineEdit->text()));
+  p->writeEntry("pihm", "Source", p->writePath(SourceLineEdit->text()));
+  p->writeEntry("pihm", "/model/att", p->writePath(attFileLineEdit->text()));
 
   QDir dir = QDir::home();
   QString home = dir.homePath();

@@ -8,7 +8,7 @@
 #include "../../pihmRasterLIBS/streamDefinition.h"
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
-#include "../../pihmLIBS/fileStruct.h"
+#include <qgsproject.h>
 
 #include <fstream>
 #include <iostream>
@@ -26,29 +26,18 @@ StreamGridDlg::StreamGridDlg(QWidget *parent)
   connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
   connect(pushButtonSuggestMe, SIGNAL(clicked()), this, SLOT(suggestMe()));
 
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  inputFileLineEdit->setText(readLineNumber(qPrintable(projFile), 7));
+  inputFileLineEdit->setText(p->readPath(p->readEntry("pihm", "fac"))); //7
   outputFileLineEdit->setText(projDir+"/RasterProcessing/str.asc");
 
 }
 
 void StreamGridDlg::inputBrowse()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  cout << qPrintable(projDir);
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
   QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir+"/RasterProcessing","Flow Acc Grid File(*.adf *.asc)");
   inputFileLineEdit->setText(str);
@@ -72,17 +61,12 @@ void StreamGridDlg::outputBrowse()
 
 void StreamGridDlg::run()
 {
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  tFile.close();
-  cout << qPrintable(projDir);
-  writeLineNumber(qPrintable(projFile), 8, qPrintable(inputFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 9, qPrintable(outputFileLineEdit->text()));
-  writeLineNumber(qPrintable(projFile), 10, qPrintable(inputThreshLineEdit->text()));
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
+
+  p->writeEntry("pihm", "fac", p->writePath(inputFileLineEdit->text())); // 8
+  p->writeEntry("pihm", "strgrid", p->writePath(outputFileLineEdit->text())); // 9
+  p->writeEntry("pihm", "facThreshold", inputThreshLineEdit->text().toInt()); // 10
 
   QDir dir = QDir::home();
   QString home = dir.homePath();
@@ -210,16 +194,11 @@ void StreamGridDlg::suggestMe(){
   sprintf(strThresh, "%d", (int)(count*0.02));
   QString qstrThresh(strThresh);
   inputThreshLineEdit->setText(strThresh);
-
-  QString projDir, projFile;
-  QFile tFile(QDir::homePath()+"/project.txt");
-  tFile.open(QIODevice::ReadOnly | QIODevice::Text);
-  QTextStream tin(&tFile);
-  projDir  = tin.readLine();
-  projFile = tin.readLine();
-  cout << qPrintable(projDir);
-
+/*
+  QgsProject *p = QgsProject::instance();
+  QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
   outputFileLineEdit->setText(projDir+"/RasterProcessing/str"+qstrThresh+".asc");
+*/
 }
 
 void StreamGridDlg::help()

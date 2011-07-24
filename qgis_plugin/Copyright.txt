@@ -1,0 +1,16 @@
+LICENSE
+=======
+
+This is a tricky part. There is statement at http://www.pihm.psu.edu/ regarding original unmodified PIHM that
+
+"Penn State University makes no proprietary claims, either statutory or otherwise, to this version and release of PIHM and considers PIHM to be in the public domain for use by any person or entity for any purpose without any fee or charge."
+
+Source code for unmodified PIHM is release under GPL according to http://sourceforge.net/projects/pihmgis/ . While previous statement is compatible with GPL, unmodified version contains and links againt code for triangle.
+
+Triangle requires special license for commercial free software in particular thus it is not GPL-compatible as one cannot get revenue from making bussines through development and providing support for free software without special permission. Another complication is that some source files in original unmodified PIHM contain statement that code is free for reasearch purposes only. This clearly violates GPL requirements.
+
+I assume that statement on official web page is accurate and code archive on sourceforge is a bit outdated, thus making it possible to release this modified version under GPL 3.
+
+However this binary distribution contains binary form of triangle but is not linked to, which cannot be covered by GPL. However its license does not prohibit explicitly to distribute it in binary form not for commercial purpose http://www.cs.cmu.edu/~quake/triangle.html .
+
+Full text is available at http://www.gnu.org/licenses/gpl-3.0.html .

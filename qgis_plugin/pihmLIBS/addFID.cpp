@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iomanip>
 #include "shapefil.h"
+#include <QFile>
 
 using namespace std;
 
@@ -52,17 +53,9 @@ void addFID(const char *dbfFileName){
   DBFClose(newdbf);
 
   cout<<"Writing to the .dbf File...";
-  char buffer[100];
-  ifstream infile;
-  ofstream outfile;
-  infile.open("temp.dbf",ios::binary|ios::in);
-  outfile.open(dbfFileName,ios::binary|ios::out);
-  int j=1;
-  //cout<<"\nWriting to the .dbf file...";
-  while(infile) {
-    infile.read(buffer,100);
-    infile.seekg(j*100); j++;
-    outfile.write(buffer,100);
-  }
+  if (QFile::exists(dbfFileName))
+    if (!QFile::remove(dbfFileName))
+      qDebug("Failed to remove old dbfFileName @ %s", __FILE__);
+  QFile::rename("temp.dbf", dbfFileName);
   cout<<"Done!\n\n";
 }

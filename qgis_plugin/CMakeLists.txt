@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
+add_definitions( -DSUNDIALS_240=1 )
+
 if( WIN32 )
-# Get OSGeo4W with dev packages for QGis, Qt & Qwt. Get VC++ 2008 Express Edition
+# Get OSGeo4W with dev packages for QGis, Qt & Qwt. Get VC++ 2008 Express Edition & CMake
 # Start command line for VC++ 2008 Express
 # > cd to source code
 # > mkdir build
@@ -9,31 +11,56 @@ if( WIN32 )
 # > "\Program Files\CMake 2.8\bin\cmake.exe" ..
 # > nmake
 # > nmake install
+# Alternatively (especially for debug)
+# > mkdir vs2008
+# > cd vs2008
+# > "\Program Files\CMake 2.8\bin\cmake.exe" -G "Visual Studio 9 2008" ..
   set( OSGEO_DIR "C:\\OSGeo4W" )
 	set( ENV{GDAL_ROOT} ${OSGEO_DIR} )
 	set( ENV{QTDIR} ${OSGEO_DIR} )
 	set( SUNDIALS_DIR "C:\\Progra~1\\sundials" )
-	set( CMAKE_INSTALL_PREFIX "${OSGEO_DIR}\\apps\\qgis\\plugins" CACHE PATH "" FORCE )
+#	set( CMAKE_INSTALL_PREFIX "${OSGEO_DIR}" CACHE PATH "" FORCE )
+	#	set( CMAKE_LIBRARY_OUTPUT_DIRECTORY "apps\\qgis\\plugins" )
+	#	set( CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin" )
+else() # Should work for Ubuntu 11.04 with sudo. QGis doesn't work with symlinked plugin :( Give a try to QGIS_PLUGINPATH
+# > sudo apt-get install libqgis-dev libqwt5-qt4-dev libsundials-serial-dev triangle-bin liblapack-dev libshp-dev
+	set( CMAKE_INSTALL_PREFIX "/usr/lib/qgis" CACHE PATH "" FORCE )
+	#	set( SUNDIALS_LINUX_EXTRA gslcblas )
+	#	find_package(LAPACK REQUIRED) # broken and requires fortran compiler
+	#	message(${LAPACK_LIBRARIES})
+	set ( SUNDIALS_LINUX_EXTRA lapack )
 endif()
 
 # set( CMAKE_BUILD_TYPE Release FORCE)
 
-project(pihmgisplugin)
+project(pihm)
 
 ########################################################
 # Files
 
+set( pihm_SRCS
+	#PIHM_v2.0/calib.h
+	#PIHM_v2.0/calib.cpp
+	#PIHM_v2.0/f.h
+	PIHM_v2.0/update.cpp
+	PIHM_v2.0/f.cpp
+	PIHM_v2.0/pihm.h
+	PIHM_v2.0/pihm.cpp
+	#PIHM_v2.0/print_functions.h
+	PIHM_v2.0/print.cpp
+	#PIHM_v2.0/initialize.h
+	PIHM_v2.0/initialize.cpp
+	#PIHM_v2.0/read_alloc.h
+	PIHM_v2.0/read_alloc.cpp
+	#PIHM_v2.0/et_is.h
+	PIHM_v2.0/is_sm_et.cpp
+)
+
 SET (pihmgis_SRCS
-     pihmgis.cpp
-     pihmgisgui.cpp
+	pihmgis.cpp
 	Project/DefineProject/defineproject.cpp
-	Project/OpenProject/openproject.cpp
-	Project/CloseProject/closeproject.cpp
-	Project/ImportProject/importproject.cpp
 	RasterProcessing/RunAllRaster/runallraster.cpp
 	pihmLIBS/helpDialog/helpdialog.cpp
-	pihmLIBS/fileStruct.h
-	pihmLIBS/fileStruct.cpp
 	pihmRasterLIBS/bin2ascii.h
 	pihmRasterLIBS/bin2ascii.cpp
 	pihmRasterLIBS/avexec32.h
@@ -70,7 +97,7 @@ SET (pihmgis_SRCS
 	RasterProcessing/CatchmentGrid/catchmentgrid.cpp
 	RasterProcessing/CatchmentPolygon/catchmentpolygon.cpp
 	pihmLIBS/polygonToPolyline.h
-	pihmLIBS/simplifyPolyShp.h
+	pihmLIBS/simplifyPolySHP.h
 	pihmLIBS/splitLineAtVertices.h
 	pihmLIBS/mergeFeatures.h
 	VectorProcessing/Dissolve/dissolve.cpp
@@ -82,7 +109,6 @@ SET (pihmgis_SRCS
 	pihmLIBS/createTinShapeFile.cpp
 	DomainDecomposition/RunAllDomain/runnalldomain.cpp
 	DomainDecomposition/GenerateShapeTopology/generateshapetopology.cpp
-	DomainDecomposition/RunTriangle/triangle.cpp
 	DomainDecomposition/RunTriangle/runtriangle.cpp
 	DomainDecomposition/CreateTINs/createtins.cpp
 	pihmLIBS/pickGridValue.h
@@ -109,36 +135,17 @@ SET (pihmgis_SRCS
 	DataModelLoader/CalibFile/calibfile.cpp
 	DataModelLoader/InitFile/initfile.cpp
 	DataModelLoader/IbcFile/ibcfile.cpp
-	#PIHM_v2.0/calib.h
-	#PIHM_v2.0/calib.cpp
-	#PIHM_v2.0/f.h
-	PIHM_v2.0/update.cpp
-	PIHM_v2.0/f.cpp
-	PIHM_v2.0/pihm.h
-	PIHM_v2.0/pihm.cpp
-	#PIHM_v2.0/print_functions.h
-	PIHM_v2.0/print.cpp
-	#PIHM_v2.0/initialize.h
-	PIHM_v2.0/initialize.cpp
-	#PIHM_v2.0/read_alloc.h
-	PIHM_v2.0/read_alloc.cpp
-	#PIHM_v2.0/et_is.h
-	PIHM_v2.0/is_sm_et.cpp
-	MyNewThread.cpp
 	RunPIHM/runpihm.cpp
 	pihmLIBS/generateShape.h
 	pihmLIBS/generateShape.cpp
 	Analysis/TimeSeries/plotTS.cpp
 	Analysis/TimeSeries/timeseries.cpp
-	Analysis/Spatialplot/spatialplot.cpp
+	Analysis/SpatialPlot/spatialplot.cpp
 	Help/About/about.cpp
 )
 
-SET (pihmgis_UIS pihmgisgui.ui
+SET (pihmgis_UIS
 	Project/DefineProject/defineproject.ui
-	Project/OpenProject/openproject.ui
-	Project/CloseProject/closeproject.ui
-	Project/ImportProject/importproject.ui
 	RasterProcessing/RunAllRaster/runallraster.ui
 	pihmLIBS/helpDialog/helpdialog.ui
 	RasterProcessing/FillPits/fillpits.ui
@@ -174,12 +181,8 @@ SET (pihmgis_UIS pihmgisgui.ui
 )
 
 SET (pihmgis_MOC_HDRS
-     pihmgis.h
-     pihmgisgui.h
+	pihmgis.h
 	Project/DefineProject/defineproject.h
-	Project/OpenProject/openproject.h
-	Project/CloseProject/closeproject.h
-	Project/ImportProject/importproject.h
 	RasterProcessing/RunAllRaster/runallraster.h
 	pihmLIBS/helpDialog/helpdialog.h
 	RasterProcessing/FillPits/fillpits.h
@@ -233,9 +236,9 @@ QT4_WRAP_CPP (pihmgis_MOC_SRCS  ${pihmgis_MOC_HDRS})
 
 QT4_ADD_RESOURCES(pihmgis_RCC_SRCS ${pihmgis_RCCS})
 
-add_definitions( -DGUI_EXPORT= -DCORE_EXPORT= -DSUNDIALS_240=1 )
+add_definitions( -DGUI_EXPORT= -DCORE_EXPORT= )
 
-include_directories( ${CMAKE_CURRENT_BINARY_DIR} )
+include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${GDAL_INCLUDE_DIR} )
 
 if( WIN32 )
 	add_definitions( -DNO_TIMER=1 -D_CRT_SECURE_NO_WARNINGS=1 )
@@ -246,29 +249,112 @@ if( WIN32 )
      ${OSGEO_DIR}\\include
      ${SUNDIALS_DIR}\\include
 	)
+	set ( QWT_LIB "qwt5" )
+	set ( LIBSHP "shapelib_i" )
+else() # Works for Ubuntu 11.04
+	include_directories( /usr/include/qgis /usr/include/qwt-qt4 )
+	link_directories( /usr/lib/lapack )
+	set ( QWT_LIB "qwt-qt4" )
+	set ( LIBSHP "shp" )
 endif()
 
 ADD_LIBRARY (pihmgisplugin MODULE ${pihmgis_SRCS} ${pihmgis_MOC_SRCS} ${pihmgis_RCC_SRCS} ${pihmgis_UIS_H})
+# debug only
+#set(LIBRARY_OUTPUT_PATH /usr/lib/qgis/plugins) 
 
 target_link_libraries(pihmgisplugin
-  ${GDAL_LIBRARY}
-  qgis_core
-  qwt5
-  ${QT_LIBRARIES}
-	sundials_cvode
-	sundials_nvecserial
+	${GDAL_LIBRARY}
+	qgis_core
+	${QWT_LIB}
+	${QT_LIBRARIES}
+	${LIBSHP}
+	#	sundials_cvode
+	#	sundials_nvecserial
+	#	${SUNDIALS_LINUX_EXTRA}
 )
 
-#  -static-libgcc
-#  -L/C/OSGeo4W/lib
-#	-L/usr/local/lib
+# Standalone
+add_executable(pihm ${pihm_SRCS})
+set_target_properties(pihm
+	PROPERTIES COMPILE_DEFINITIONS NOQT=1
+)
+target_link_libraries(pihm
+	sundials_cvode
+	sundials_nvecserial
+	${SUNDIALS_LINUX_EXTRA}
+)
 
 ########################################################
 # Install
 
-install(TARGETS pihmgisplugin LIBRARY DESTINATION ".")
+
+if( WIN32 )
+#set( CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP true )
+set( CMAKE_INSTALL_DEBUG_LIBRARIES true )
+install(TARGETS pihm pihmgisplugin
+LIBRARY DESTINATION "apps\\qgis\\plugins"
+RUNTIME DESTINATION "bin")
+else()
+install(TARGETS pihm pihmgisplugin
+LIBRARY DESTINATION "lib/qgis/plugins"
+RUNTIME DESTINATION "bin")
+endif()
 
 #INSTALL(TARGETS pihmgisplugin
 #  RUNTIME DESTINATION ${QGIS_PLUGIN_DIR}
 #  LIBRARY DESTINATION ${QGIS_PLUGIN_DIR})
 
+INCLUDE(InstallRequiredSystemLibraries)
+
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "modified PIHM & QGis plug-in")
+SET(CPACK_PACKAGE_VENDOR "mlt")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.txt")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/Copyright.txt")
+SET(CPACK_PACKAGE_VERSION_MAJOR "2")
+SET(CPACK_PACKAGE_VERSION_MINOR "3")
+SET(CPACK_PACKAGE_VERSION_PATCH "1")
+#set( CMAKE_INSTALL_PREFIX "apps\\qgis\\plugins" CACHE PATH "" FORCE )
+#SET(CPACK_SET_DESTDIR ON)
+#SET(CPACK_PACKAGE_INSTALL_DIRECTORY "C:\\\\OSGeo4W\\\\apps\\\\qgis\\\\plugins")
+IF( WIN32 )
+  set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR} )
+  set( CPACK_NSIS_INSTALL_ROOT "C:" )
+  set( CPACK_OUTPUT_FILE_NAME "pihm_mod_2.3.1-qgis_1.7-win32.exe" )
+  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "OSGeo4W")
+  # There is a bug in NSI that does not handle full unix paths properly. Make
+  # sure there is at least one set of four (4) backlasshes.
+#  SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
+#  SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
+  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}")
+  SET(CPACK_NSIS_HELP_LINK "http://www.pihm.psu.edu")
+  SET(CPACK_NSIS_URL_INFO_ABOUT "http://www.pihm.psu.edu")
+#  SET(CPACK_NSIS_MODIFY_PATH ON)
+ELSE()
+	set( CPACK_GENERATOR "DEB" )
+#  SET(CPACK_STRIP_FILES "bin/MyExecutable")
+#  SET(CPACK_SOURCE_STRIP_FILES "")
+ENDIF()
+#SET(CPACK_PACKAGE_EXECUTABLES "MyExecutable" "My Executable")
+
+#set(CPACK_SOURCE_GENERATOR ZIP)
+set(CPACK_SOURCE_IGNORE_FILES
+"~$"
+"\\\\.bak$"
+"\\\\.o$"
+"^\\\\."
+"DS_Store"
+"PIHM_v1.5/"
+"\\\\.svn/"
+"/build/"
+"/vs2008/"
+"\\\\.dbf$"
+"\\\\.shp$"
+"\\\\.shx$"
+"\\\\.pro$"
+"\\\\.app/"
+)
+
+set( CPACK_DEBIAN_PACKAGE_MAINTAINER "Mikhail Titov <mlt@gmx.us>" )
+SET( CPACK_DEBIAN_PACKAGE_DEPENDS "libsundials-cvode1, libsundials-nvecserial0, libqgis1.7.0, libqwt5-qt4, triangle-bin" )
+
+INCLUDE(CPack)

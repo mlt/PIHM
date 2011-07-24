@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "lsm.h"
-#include "./../pihmLIBS/shapefil.h"
+#include <shapefil.h>
 
 
 #define MAX 8 // MAX => No. of converging cells to one cell
