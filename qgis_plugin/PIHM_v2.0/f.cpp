@@ -71,7 +71,7 @@
  *      b) Qu, Y. & C. Duffy, 2007, "A semidiscrete finite volume formulation  *
  *      for multiprocess watershed simulation". Water Resources Research       *
  *******************************************************************************/
-#include <iostream>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -80,13 +80,24 @@
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_types.h>
 #include "pihm.h"
+
+#ifndef NOQT
+#include <QtGui>
+#include <QApplication>
+#include <iomanip>
+#include <fstream>
+#include <QDebug>
+#include "../MyNewThread.h"
+extern MyNewThread * thread; // ouch!
+#endif
+
 #define multF 2
 #define MINpsi  -70
 #define EPS 0.05
 #define THRESH 0.0
 #define UNIT_C 1440 /* Note 60*24 for calculation of yDot in m/min units while forcing is in m/day. */
 #define GRAV 9.8*60*60  /* Note the dependence on physical units */
-using namespace std;
+
 realtype Interpolation(TSD *Data, realtype t);
 
 realtype returnVal(realtype rArea, realtype rPerem, realtype eqWid,realtype ap_Bool)
@@ -131,7 +142,7 @@ realtype CS_AreaOrPerem(int rivOrder, realtype rivDepth, realtype rivCoeff, real
     return returnVal(rivArea, rivPerem, eq_Wid, a_pBool);
   default:
     printf("\n Relevant Values entered are wrong");
-    printf("\n Depth: %lf\tCoeff: %lf\tOrder: %d\t");
+//			printf("\n Depth: %lf\tCoeff: %lf\tOrder: %d\t");
     return 0;
   }
 }
@@ -587,8 +598,23 @@ int f(realtype t, N_Vector CV_Y, N_Vector CV_Ydot, void *DS)
         MD->FluxRiv[i][1] = CrossA*sqrt(GRAV*UNIT_C*UNIT_C*MD->DummyY[i + 3*MD->NumEle]);          /* Note the dependence on physical units */
         break;
       default:
+#ifdef NOQT
         printf("Fatal Error: River Routing Boundary Condition Type Is Wrong!");
         exit(1);
+#else
+        {
+          QDir hdir = QDir::home();
+          QString home = hdir.homePath();
+          QString logFileName(home+"/log.html");
+          std::ofstream log(logFileName, std::ios::app);
+          log << "<p style=\"color:red\">Fatal Error in f.cpp: River Routing Boundary Condition Type Is Wrong!</p>";
+          log << "i=" << i << ", MD->Riv[i].down=" << MD->Riv[i].down << "<br/>";
+          log.close();
+          thread->UpdateLog(0);
+        }
+        qDebug() << __FILE__ << " : Fatal Error: River Routing Boundary Condition Type Is Wrong!";
+        return -1;     // negative value if it failed unrecoverably (in which case the integration is halted and CV_RHSFUNC_FAIL is returned)
+#endif
       }
       /* Note: bdd condition for subsurface element can be changed. Assumption: No flow condition */
       MD->FluxRiv[i][9]=0;

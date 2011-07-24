@@ -20,8 +20,10 @@
  * Please provide relevant references if you use this code in your research work  *
  *--------------------------------------------------------------------------------*
  *********************************************************************************/
+#ifndef NOQT
 #include <QtGlobal>
 #include <QErrorMessage>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -30,6 +32,7 @@
 #include <sundials/sundials_types.h>
 #include <nvector/nvector_serial.h>
 #include "pihm.h"
+#include <assert.h>
 
 
 int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
@@ -39,37 +42,53 @@ int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
   realtype a_zmin, a_zmax, b_zmin, b_zmax, c_zmin, c_zmax;
   realtype tempvalue1,tempvalue2,tempvalue3;
   FILE *init_file;
-  char *fn;
-  realtype *zmin_cor;
+  int read;
 
-  zmin_cor=(realtype *)malloc(DS->NumEle*sizeof(realtype));
-
-  printf("\nInitializing data structure ... ");
+  printf("\nInitializing data structure ...\n");
 
   /* allocate memory storage to flux terms */
-  DS->FluxSurf = (realtype **)malloc(DS->NumEle*sizeof(realtype));
-  DS->FluxSub = (realtype **)malloc(DS->NumEle*sizeof(realtype));
-  DS->FluxRiv = (realtype **)malloc(DS->NumRiv*sizeof(realtype));
-  DS->EleET = (realtype **)malloc(DS->NumEle*sizeof(realtype));
+  DS->FluxSurf = (realtype **)malloc(DS->NumEle*sizeof(realtype*));
+  assert(DS->FluxSurf);
+  DS->FluxSub = (realtype **)malloc(DS->NumEle*sizeof(realtype*));
+  assert(DS->FluxSub);
+  DS->FluxRiv = (realtype **)malloc(DS->NumRiv*sizeof(realtype*));
+  assert(DS->FluxRiv);
+  DS->EleET = (realtype **)malloc(DS->NumEle*sizeof(realtype*));
+  assert(DS->EleET);
   DS->ElePrep = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->ElePrep);
   DS->EleViR = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleViR);
   DS->Recharge = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->Recharge);
   DS->EleIS = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleIS);
   DS->EleISmax = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleISmax);
   DS->EleISsnowmax = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleISsnowmax);
   DS->EleSnow = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleSnow);
   DS->EleSnowGrnd = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleSnowGrnd);
   DS->EleSnowCanopy = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleSnowCanopy);
   DS->EleTF = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleTF);
   DS->EleETloss = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleETloss);
   DS->EleNetPrep = (realtype *)malloc(DS->NumEle*sizeof(realtype));
+  assert(DS->EleNetPrep);
 
 
   for(i=0; i<DS->NumEle; i++)
   {
     DS->FluxSurf[i] = (realtype *)malloc(3*sizeof(realtype));
+    assert(DS->FluxSurf[i]);
     DS->FluxSub[i] = (realtype *)malloc(3*sizeof(realtype));
+    assert(DS->FluxSub[i]);
     DS->EleET[i] = (realtype *)malloc(4*sizeof(realtype));
+    assert(DS->EleET[i]);
 
     a_x = DS->Node[DS->Ele[i].node[0]-1].x;
     b_x = DS->Node[DS->Ele[i].node[1]-1].x;
@@ -145,6 +164,7 @@ int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
   for(i=0; i<DS->NumRiv; i++)
   {
     DS->FluxRiv[i] = (realtype *)malloc(11*sizeof(realtype));
+    assert(DS->FluxRiv[i]);
     for(j=0; j<3; j++)
     {
       /* Note: Strategy to use BC < -4 for river identification */
@@ -200,23 +220,30 @@ int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
     if(i==0)
     {
       DS->PrintVar[i]=(realtype *)calloc(DS->NumEle+DS->NumRiv,sizeof(realtype));
+      assert(DS->PrintVar[i]);
     }
     else if((i>=7)&&(i<19))
     {
       DS->PrintVar[i]=(realtype *)calloc(DS->NumRiv,sizeof(realtype));
+      assert(DS->PrintVar[i]);
     }
     else
     {
       DS->PrintVar[i]=(realtype *)calloc(DS->NumEle,sizeof(realtype));
+      assert(DS->PrintVar[i]);
     }
   }
-  QErrorMessage * tempMsg = new QErrorMessage;
+#ifndef NOQT
+  QErrorMessage tempMsg;
+#endif
   /* Debugging artifacts in data created due to coarser resolution of model elements */
   if(CS->FillEleSurf==1)
   {
     printf("\n Filling Surface Sink Elements");
+#ifndef NOQT
     qWarning("Filling Surface Sink Element");
     //??tempMsg->showMessage("Filling Surface Sink Elements");
+#endif
     for(i=0; i<DS->NumEle; i++)
     {
       /* Correction of Surf Elev (artifacts due to coarse scale discretization). Not needed if there is lake feature.*/
@@ -312,9 +339,12 @@ int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
   if(BoolR==1)
   {
     printf("\n\tRiver elevation correction needed");
+#ifndef NOQT
     qWarning("River elevation correction may be needed");
-    tempMsg->showMessage("Warning: River Elevation Correction may be needed");
+    tempMsg.showMessage("Warning: River Elevation Correction may be needed");
+#else
     getchar();
+#endif
   }
   //}
   for(i=0; i<DS->NumEle; i++)
@@ -414,9 +444,9 @@ int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
   /* hot start mode */
   else
   {
-    fn = (char *)malloc((strlen(filename)+5)*sizeof(char));
-    strcpy(fn, filename);
-    init_file = fopen(strcat(fn, ".init"), "r");
+    char buf[MAX_PATH];
+    snprintf(buf, MAX_PATH, "%s.init", filename);
+    init_file = fopen(buf, "r");
 
     if(init_file == NULL)
     {
@@ -427,7 +457,8 @@ int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
     {
       for(i=0; i<DS->NumEle; i++)
       {
-        fscanf(init_file, "%lf %lf %lf %lf %lf", &DS->EleIS[i],&DS->EleSnow[i],&tempvalue1,&tempvalue2,&tempvalue3);
+        read = fscanf(init_file, "%lf %lf %lf %lf %lf", &DS->EleIS[i],&DS->EleSnow[i],&tempvalue1,&tempvalue2,&tempvalue3);
+        assert(5 == read);
         DS->EleSnowGrnd[i]=(1-DS->Ele[i].VegFrac)* DS->EleSnow[i];
         DS->EleSnowCanopy[i]=DS->Ele[i].VegFrac* DS->EleSnow[i];
         NV_Ith_S(CV_Y, i)=tempvalue1;
@@ -436,7 +467,8 @@ int initialize(char *filename, Model_Data DS, Control_Data *CS, N_Vector CV_Y)
       }
       for(i=0; i<DS->NumRiv; i++)
       {
-        fscanf(init_file, "%lf %lf",&tempvalue1,&tempvalue2);
+        read = fscanf(init_file, "%lf %lf",&tempvalue1,&tempvalue2);
+        assert(2 == read);
         NV_Ith_S(CV_Y, i + 3*DS->NumEle) = tempvalue1;
         NV_Ith_S(CV_Y, i + 3*DS->NumEle+DS->NumRiv) =tempvalue2;
       }

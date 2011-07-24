@@ -54,6 +54,7 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#include <assert.h>
 
 /* SUNDIAL Header Files */
 #include <sundials/sundials_types.h>   /* realtype, integertype, booleantype defination */
@@ -67,9 +68,9 @@
 #include "update.h"
 #include <iostream>
 #include <fstream>
-#include <QtGui>
-#include <QtGui/QProgressBar>
-#include "progress.h"
+#ifndef NOQT
+#include "../MyNewThread.h"
+#endif
 #include <assert.h>
 
 #define UNIT_C 1440      /* Unit Conversions */
@@ -86,24 +87,30 @@ void read_alloc(char *, Model_Data, Control_Data *);  /* Variable definition */
 void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
 
 /* Main Function */
-int pihm(int argc, char **argv, QProgressBar* bar, QString logFileName, int* RunFlag)
-{
-  char tmpLName[20],tmpFName[400];  /* rivFlux File names */
-  Model_Data mData;                 /* Model Data                */
-  Control_Data cData;               /* Solver Control Data       */
-  N_Vector CV_Y;                    /* State Variables Vector    */
-  void *cvode_mem;                  /* Model Data Pointer        */
+#ifdef NOQT
+int main(int argc, char **argv) {
+  char logFileName[] = "log.html";
+#else
+extern MyNewThread * thread;
+int pihm(int argc, char **argv, const char * logFileName) {
+  int progress =  0;
+#endif
+
+  struct model_data_structure mData = {0};                 /* Model Data                */
+  Control_Data cData = {0};               /* Solver Control Data       */
+  N_Vector CV_Y = NULL;                    /* State Variables Vector    */
+  void *cvode_mem = NULL;                  /* Model Data Pointer        */
   int flag;                         /* flag to test return value */
-  FILE *Ofile[22];              /* Output file     */
-  char *ofn[22];
-  FILE *iproj;      /* Project File */
-  int N;                            /* Problem size              */
-  int i,j,k;                        /* loop index                */
+  FILE *Ofile[22] = {NULL};               /* Output file     */
+  FILE *iproj = NULL;     /* Project File */
+  int N = 0;                            /* Problem size              */
+  int i,j;  //,k;                      /* loop index                */
   realtype t;           /* simulation time           */
   realtype NextPtr, StepSize;       /* stress period & step size */
-  clock_t start, end_r, end_s;      /* system clock at points    */
-  realtype cputime_r, cputime_s;    /* for duration in realtype  */
-  char *filename;
+//    clock_t start, end_r, end_s;    /* system clock at points    */
+//    realtype cputime_r, cputime_s;  /* for duration in realtype  */
+  char filename[MAX_PATH];
+  char buf[MAX_PATH];
 
   /* Project Input Name */
   if(argc!=2)
@@ -118,96 +125,87 @@ int pihm(int argc, char **argv, QProgressBar* bar, QString logFileName, int* Run
     }
     else
     {
-      fscanf(iproj,"%s",filename);
+      int read = fscanf(iproj,"%s",filename);
+      assert(1 == read);
     }
   }
   else
   {
     /* get user specified file name in command line */
-    filename = (char *)malloc(strlen(argv[1])*sizeof(char));
-    strcpy(filename,argv[1]);
-    cout<<filename<<"\n";
+    strncpy(filename,argv[1], MAX_PATH);
   }
   /* Open Output Files */
-  ofn[0] = (char *)malloc((strlen(filename)+10)*sizeof(char));
-  strcpy(ofn[0], filename);
-  Ofile[0]=fopen(strcat(ofn[0], ".GW.txt"),"w");
-  cout<<ofn[0]<<"\n";
-  ofn[1] = (char *)malloc((strlen(filename)+10)*sizeof(char));
-  strcpy(ofn[1], filename);
-  Ofile[1]=fopen(strcat(ofn[1], ".surf.txt"),"w");
-  ofn[2] = (char *)malloc((strlen(filename)+10)*sizeof(char));
-  strcpy(ofn[2], filename);
-  Ofile[2]=fopen(strcat(ofn[2], ".et0.txt"),"w");
-  ofn[3] = (char *)malloc((strlen(filename)+10)*sizeof(char));
-  strcpy(ofn[3], filename);
-  Ofile[3]=fopen(strcat(ofn[3], ".et1.txt"),"w");
-  ofn[4] = (char *)malloc((strlen(filename)+10)*sizeof(char));
-  strcpy(ofn[4], filename);
-  Ofile[4]=fopen(strcat(ofn[4], ".et2.txt"),"w");
-  ofn[5] = (char *)malloc((strlen(filename)+10)*sizeof(char));
-  strcpy(ofn[5], filename);
-  Ofile[5]=fopen(strcat(ofn[5], ".is.txt"),"w");
-  ofn[6] = (char *)malloc((strlen(filename)+10)*sizeof(char));
-  strcpy(ofn[6], filename);
-  Ofile[6]=fopen(strcat(ofn[6], ".snow.txt"),"w");
-  cout<<ofn[6]<<"\n";
+  sprintf(buf,"%s.GW.txt", filename);
+  cout<<buf<<endl;
+  Ofile[0]=fopen(buf, "w");
+  sprintf(buf,"%s.surf.txt", filename);
+  cout<<buf<<endl;
+  Ofile[1]=fopen(buf,"w");
+  sprintf(buf, "%s.et0.txt", filename);
+  cout<<buf<<endl;
+  Ofile[2] = fopen(buf, "w");
+  sprintf(buf, "%s.et1.txt", filename);
+  cout<<buf<<endl;
+  Ofile[3]=fopen(buf, "w");
+  sprintf(buf, "%s.et2.txt", filename);
+  cout<<buf<<endl;
+  Ofile[4]=fopen(buf, "w");
+  sprintf(buf, "%s.is.txt", filename);
+  cout<<buf<<endl;
+  Ofile[5]=fopen(buf, "w");
+  sprintf(buf, "%s.snow.txt", filename);
+  cout<<buf<<endl;
+  Ofile[6]=fopen(buf, "w");
+
 
   for(i=0; i<11; i++)
   {
-    sprintf(tmpLName,".rivFlx%d.txt",i);
-    strcpy(tmpFName,filename);
-    cout<<tmpFName<<"\n";
-    strcat(tmpFName,tmpLName);
-    cout<<tmpFName<<"\n";
-    Ofile[7+i]=fopen(tmpFName,"w");
+    sprintf(buf, "%s.rivFlx%d.txt", filename, i);
+    cout<<buf<<endl;
+    Ofile[7+i]=fopen(buf, "w");
   }
   //cout<<ofn[17]<<"\n";
-  ofn[18] = (char *)malloc((strlen(filename)+15)*sizeof(char));
-  strcpy(ofn[18], filename);
-  Ofile[18]=fopen(strcat(ofn[18], ".stage.txt"),"w");
-  ofn[19] = (char *)malloc((strlen(filename)+15)*sizeof(char));
-  strcpy(ofn[19], filename);
-  Ofile[19]=fopen(strcat(ofn[19], ".unsat.txt"),"w");
-  ofn[20] = (char *)malloc((strlen(filename)+15)*sizeof(char));
-  strcpy(ofn[20], filename);
-  Ofile[20]=fopen(strcat(ofn[20], ".Rech.txt"),"w");
+  sprintf(buf, "%s.stage.txt", filename);
+  Ofile[18]=fopen(buf, "w");
+  sprintf(buf, "%s.unsat.txt", filename);
+  Ofile[19]=fopen(buf, "w");
+  sprintf(buf, "%s.Rech.txt", filename);
+  Ofile[20]=fopen(buf, "w");
 
-  /* allocate memory for model data structure */
-  mData = (Model_Data)malloc(sizeof *mData);
 
   printf("\n ...  PIHM 2.0 is starting ... \n");
 
   /* read in 9 input files with "filename" as prefix */
-  read_alloc(filename, mData, &cData);
+  read_alloc(filename, &mData, &cData);
 
 /*	if(mData->UnsatMode ==1)
     {
       } */
-  if(mData->UnsatMode ==2)
+  if(mData.UnsatMode ==2)
   {
     /* problem size */
-    N = 3*mData->NumEle + 2*mData->NumRiv;
-    mData->DummyY=(realtype *)malloc((3*mData->NumEle+2*mData->NumRiv)*sizeof(realtype));
+    N = 3*mData.NumEle + 2*mData.NumRiv;
+    mData.DummyY=(realtype *)malloc((3*mData.NumEle+2*mData.NumRiv)*sizeof(realtype));
+    memset(mData.DummyY, 0, N*sizeof(realtype));
   }
   /* initial state variable depending on machine*/
   CV_Y = N_VNew_Serial(N);
 
   /* initialize mode data structure */
-  int BoolR = initialize(filename, mData, &cData, CV_Y);
+  int BoolR = initialize(filename, &mData, &cData, CV_Y);
   ofstream log;
   if(cData.FillEleSurf==1) {
-    log.open(qPrintable(logFileName), ios::app);
+    log.open(logFileName, ios::app);
     log<<"Filling Surface Sink Elements...<br>";
     log.close();
   }
   if(cData.FillEleSub==1) {
-    log.open(qPrintable(logFileName), ios::app);
+    log.open(logFileName, ios::app);
     log<<"Filling Subsurface Sink Elements...<br>";
     log.close();
   }
   if(BoolR==1) {
-    log.open(qPrintable(logFileName), ios::app);
+    log.open(logFileName, ios::app);
     log<<"WARNING: River Elevation Correction may be needed...<br>";
     log.close();
   }
@@ -216,7 +214,7 @@ int pihm(int argc, char **argv, QProgressBar* bar, QString logFileName, int* Run
 
   /* allocate memory for solver */
   cvode_mem = CVodeCreate(CV_BDF, CV_NEWTON);
-  if(cvode_mem == NULL) {printf("CVodeMalloc failed. \n"); return(1);}
+  if(cvode_mem == NULL) {printf("CVodeMalloc failed. \n"); return(1); }
 
 #ifdef SUNDIALS_240
   // as of CVODE 2.6 and sundials 2.4.0 some names changed // mlt
@@ -244,21 +242,19 @@ int pihm(int argc, char **argv, QProgressBar* bar, QString logFileName, int* Run
 
   /* set start time */
   t = cData.StartTime;
-  start = clock();
+//    start = clock();
 
+  bool error = false;
   /* start solver in loops */
-  for(i=0; i<cData.NumSteps; i++)
+  for(i=0; i<cData.NumSteps && !error; i++)
   {
-    cout<<"i= "<<i<<" RunFlag= "<<*RunFlag<<"\n";
-    if(*RunFlag == 0)
-      return 0;
     /*	if (cData.Verbose != 1)
             {
               printf("  Running: %-4.1f%% ... ", (100*(i+1)/((realtype) cData.NumSteps)));
               fflush(stdout);
             } */
     /* inner loops to next output points with ET step size control */
-    while(t < cData.Tout[i+1])
+    while(t < cData.Tout[i+1] && !error)
     {
       if (t + cData.ETStep >= cData.Tout[i+1])
       {
@@ -271,23 +267,157 @@ int pihm(int argc, char **argv, QProgressBar* bar, QString logFileName, int* Run
       StepSize = NextPtr - t;
 
       /* calculate Interception Storage */
-      is_sm_et(t, StepSize, mData,CV_Y);
+      is_sm_et(t, StepSize, &mData,CV_Y);
       printf("\n Tsteps = %f ",t);
       flag = CVode(cvode_mem, NextPtr, CV_Y, &t, CV_NORMAL);
+//				assert(CV_ROOT_RETURN == flag);
+      if (CV_RHSFUNC_FAIL == flag)
+        error = true;
+#ifndef NOQT
       if(100.0*(1.0+i)/((realtype) cData.NumSteps) - (int)(100.0*(1.0+i)/((realtype) cData.NumSteps)) == 0) {
-        cout<<100*(i+1)/((realtype) cData.NumSteps)<<"\n";
-        setProgressBar(bar, 100*(i+1)/((realtype) cData.NumSteps));
+        ofstream log(logFileName, ios::app);
+        log << t << "<br>";
+        log.close();
+        thread->UpdateLog(100*(i+1)/((realtype) cData.NumSteps));
       }
-      update(t, mData);
+#endif
+      update(t,&mData);
     }
-    PrintData(Ofile,&cData,mData, CV_Y,t);
+    PrintData(Ofile,&cData,&mData, CV_Y,t);
   }
   /* Free memory */
   N_VDestroy_Serial(CV_Y);
   /* Free integrator memory */
-  //CVodeFree(cvode_mem);
-  free(mData);
-  QMessageBox::information(0,"Run PIHM","Simulation Completed Successfully!",QMessageBox::Ok);
+  CVodeFree(&cvode_mem);
+
+  free(mData.Riv_IC);
+  for(i=0; i<mData.NumP; i++) {
+    for(j=0; j<mData.TSD_Pressure[i].length; j++)
+      free(mData.TSD_Pressure[i].TS[j]);
+    free(mData.TSD_Pressure[i].TS);
+  }
+  free(mData.TSD_Pressure);
+  for(i=0; i<mData.NumLC; i++) {
+    for(j=0; j<mData.TSD_LAI[i].length; j++)
+      free(mData.TSD_LAI[i].TS[j]);
+    free(mData.TSD_LAI[i].TS);
+    for(j=0; j<mData.TSD_RL[i].length; j++)
+      free(mData.TSD_RL[i].TS[j]);
+    free(mData.TSD_RL[i].TS);
+  }
+  free(mData.TSD_LAI);
+  for(i=0; i<mData.NumRivBC; i++) {
+    for(j=0; j<mData.TSD_Riv[i].length; j++)
+      free(mData.TSD_Riv[i].TS[j]);
+    free(mData.TSD_Riv[i].TS);
+  }
+  free(mData.TSD_Riv);
+  for(i=0; i<mData.NumPrep; i++) {
+    for(j=0; j<mData.TSD_Prep[i].length; j++)
+      free(mData.TSD_Prep[i].TS[j]);
+    free(mData.TSD_Prep[i].TS);
+  }
+  free(mData.TSD_Prep);
+  for(i=0; i<mData.NumTemp; i++) {
+    for(j=0; j<mData.TSD_Temp[i].length; j++)
+      free(mData.TSD_Temp[i].TS[j]);
+    free(mData.TSD_Temp[i].TS);
+  }
+  free(mData.TSD_Temp);
+  for(i=0; i<mData.NumWindVel; i++) {
+    for(j=0; j<mData.TSD_WindVel[i].length; j++)
+      free(mData.TSD_WindVel[i].TS[j]);
+    free(mData.TSD_WindVel[i].TS);
+  }
+  free(mData.TSD_WindVel);
+  for(i=0; i<mData.NumRn; i++) {
+    for(j=0; j<mData.TSD_Rn[i].length; j++)
+      free(mData.TSD_Rn[i].TS[j]);
+    free(mData.TSD_Rn[i].TS);
+  }
+  free(mData.TSD_Rn);
+  for(i=0; i<mData.NumG; i++) {
+    for(j=0; j<mData.TSD_G[i].length; j++)
+      free(mData.TSD_G[i].TS[j]);
+    free(mData.TSD_G[i].TS);
+  }
+  free(mData.TSD_G);
+  free(mData.TSD_RL);
+  for(i=0; i<mData.NumSource; i++) {
+    for(j=0; j<mData.TSD_Source[i].length; j++)
+      free(mData.TSD_Source[i].TS[j]);
+    free(mData.TSD_Source[i].TS);
+  }
+  free(mData.TSD_Source);
+  free(mData.ISFactor);
+  free(mData.windH);
+  free(mData.Riv_Mat);
+  free(mData.Riv_Shape);
+  free(mData.Riv);
+  for(i=0; i<mData.NumMeltF; i++) {
+    for(j=0; j<mData.TSD_MeltF[i].length; j++)
+      free(mData.TSD_MeltF[i].TS[j]);
+    free(mData.TSD_MeltF[i].TS);
+  }
+  free(mData.TSD_MeltF);
+  free(mData.Soil);
+  free(mData.Geol);
+  free(mData.LandC);
+
+  for(i=0; i<mData.NumRiv; i++)
+    free(mData.FluxRiv[i]);
+  free(mData.FluxRiv);
+  free(mData.ElePrep);
+  free(mData.EleViR);
+  free(mData.Recharge);
+  free(mData.EleIS);
+  free(mData.EleISmax);
+  free(mData.EleISsnowmax);
+  free(mData.EleSnow);
+  free(mData.EleSnowGrnd);
+  free(mData.EleSnowCanopy);
+  free(mData.EleTF);
+  free(mData.EleETloss);
+  free(mData.EleNetPrep);
+  for(i=0; i<mData.NumEle; i++) {
+    free(mData.FluxSurf[i]);
+    free(mData.FluxSub[i]);
+    free(mData.EleET[i]);
+  }
+  free(mData.FluxSurf);
+  free(mData.FluxSub);
+  free(mData.EleET);
+  free(mData.Ele);
+  free(mData.Node);
+  for(i=0; i<22; i++)
+    free(mData.PrintVar[i]);
+  for(i=0; i<mData.NumHumidity; i++) {
+    for(j=0; j<mData.TSD_Humidity[i].length; j++)
+      free(mData.TSD_Humidity[i].TS[j]);
+    free(mData.TSD_Humidity[i].TS);
+  }
+  free(mData.TSD_Humidity);
+  free(mData.Ele_IC);
+  if(mData.Num1BC+mData.Num2BC > 0)
+    free(mData.TSD_EleBC);
+  if(mData.Num1BC>0) {
+    for(i=0; i<mData.Num1BC; i++) {
+      for(j=0; j<mData.TSD_EleBC[i].length; j++)
+        free(mData.TSD_EleBC[i].TS[j]);
+      free(mData.TSD_EleBC[i].TS);
+    }
+  }
+  free(mData.DummyY);
+
+  free(cData.Tout);
+#ifndef NOQT
+  {
+    ofstream log(logFileName, ios::app);
+    log<<"Done!!!<br>";
+    log.close();
+    thread->UpdateLog(100);
+  }
+#endif
   return 0;
 }
 

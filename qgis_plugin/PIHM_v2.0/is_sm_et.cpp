@@ -15,7 +15,7 @@
  *	accounted for								*
  * f) Incorporation of Interception storage for rainfall as well as snow	*
  ********************************************************************************/
-#include <iostream>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -24,7 +24,7 @@
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_types.h>
 #include "pihm.h"
-using namespace std;
+
 #define EPSILON 0.05
 #define UNIT_C 1440     /* 60*24 for calculation of yDot in m/min units while forcing is in m/day. */
 #define multF1  1
@@ -33,18 +33,12 @@ using namespace std;
 #define multF4  1.0
 realtype Interpolation(TSD *Data, realtype t);
 
-void is_sm_et(realtype t, realtype stepsize, void *DS,N_Vector VY)
+void is_sm_et(realtype t, realtype stepsize, model_data_structure *MD,N_Vector VY)
 {
   int i;
-  realtype totEvap;
   realtype Delta, Gamma;
   realtype Rn, G, T, Vel, RH, VP,P,LAI,zero_dh,cnpy_h,rl,r_a;
-  realtype isval=0,etval=0;
   realtype fracSnow,snowRate,MeltRateGrnd,MeltRateCanopy,eltRate,MF,Ts=-3.0,Tr=1.0,To=0.0,ret;
-
-  Model_Data MD;
-
-  MD = (Model_Data)DS;
 
   stepsize=stepsize/UNIT_C;
   for(i=0; i<MD->NumEle; i++)

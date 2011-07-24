@@ -115,6 +115,7 @@ void PrintData(FILE **outp,Control_Data *cD, Model_Data DS, N_Vector CV_Y, realt
   int k;
   if(cD->gwD==1)
   {
+//          avgResults_NV(outp[0],DS->PrintVar[0],CV_Y,cD->gwDInt,DS->NumEle+DS->NumRiv,t,2*DS->NumEle);
     avgResults_NV(outp[0],DS->PrintVar[0],CV_Y,cD->gwDInt,DS->NumEle,t,2*DS->NumEle);
   }
   if(cD->surfD==1)

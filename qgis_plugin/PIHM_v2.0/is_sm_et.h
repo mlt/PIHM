@@ -5,6 +5,6 @@
 #include <nvector/nvector_serial.h>
 #include "pihm.h"
 
-void is_sm_et(realtype, realtype, void *DS, N_Vector);
+void is_sm_et(realtype, realtype, model_data_structure *DS, N_Vector);
 
 #endif

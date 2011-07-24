@@ -35,12 +35,15 @@
 #include <sundials/sundials_types.h>
 #include <nvector/nvector_serial.h>
 #include <iostream>
+#ifdef NOQT
+int pihm(int, char **, const char *);
+#else
 #include <QtGui/QProgressBar>
-int pihm(int, char **, QProgressBar *, QString, int*);
+int pihm(int, char **, const char *);
+#endif
 
 /* Definition of Global Variable Types */
 
-/*FILE *riv_state_file;*/
 typedef struct element_type /* Data model for a triangular element */
 {
   int index;      /* Element No. */
@@ -424,4 +427,7 @@ void PrintData(FILE **,Control_Data *, Model_Data, N_Vector, realtype);
 #define MAX_PATH FILENAME_MAX
 #endif
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
 #endif
+#endif // PIHM_H
