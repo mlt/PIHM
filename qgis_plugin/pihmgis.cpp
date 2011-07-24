@@ -379,11 +379,14 @@ void PIHMgis::runImportProject(){
     QTextStream in(&file);
     in.readLine();   // date
     QString oldDir = in.readLine();
-    QFileInfo fi2(oldDir);
-    oldDir = fi2.dir().absPath();   // directory's parent directory
+    QRegExp rx("[\\/]"); // file could have been created on other platform, can't rely on QFileInfo
+    qDebug("oldDir = %s", qPrintable(oldDir));
+    oldDir = oldDir.left(oldDir.lastIndexOf(rx));
     int oldDirLength = oldDir.length();
+    qDebug("oldDir = %s, oldDirLength = %d", qPrintable(oldDir), oldDirLength);
     QFileInfo fi(projFile);
     QString projDir = fi.absoluteDir().absPath();
+    qDebug("new projDir is %s", qPrintable(projDir));
     QgsProject *p = QgsProject::instance();
     QString s = projFile.left(projFile.length() - 7) + "qgs";
     p->setFileName(s);   // instead of pihmgis
@@ -407,24 +410,34 @@ void PIHMgis::runImportProject(){
         break;
       case Path:
       {
-        QFileInfo fi3(projDir, ".." + s.mid(oldDirLength));
+        qDebug("Path Was %s", qPrintable(s));
+        s = ".." + s.mid(oldDirLength);
+        qDebug("Truncated version is %s", qPrintable(s));
+        QFileInfo fi(projDir, s);
         s = p->writePath(fi.canonicalFilePath());
+        qDebug("Became %s", qPrintable(s));
       }       // no break!! Don't move
       case String:
         p->writeEntry("pihm", lines[idx].prop, s);
         break;
       case Raster:
       {
-        QFileInfo fi(projDir, ".." + s.mid(oldDirLength));
+        qDebug("Raster Was %s", qPrintable(s));
+        s = ".." + s.mid(oldDirLength);
+        qDebug("Truncated version is %s", qPrintable(s));
+        QFileInfo fi(projDir, s);
         s = fi.canonicalFilePath();
+        qDebug("Became %s", qPrintable(s));
       }
         p->writeEntry("pihm", lines[idx].prop, p->writePath(s));
         mQGisIface->addRasterLayer(s);
         break;
       case Vector:
       {
+        qDebug("Vector Was %s", qPrintable(s));
         QFileInfo fi(projDir, ".." + s.mid(oldDirLength));
         s = fi.canonicalFilePath();
+        qDebug("Became %s", qPrintable(s));
       }
         p->writeEntry("pihm", lines[idx].prop, p->writePath(s));
         mQGisIface->addVectorLayer(s, QString::null, "ogr");
