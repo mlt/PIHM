@@ -6,6 +6,8 @@
 class attFileDlg : public QDialog, private Ui::AttFileGeneration
 {
 Q_OBJECT
+
+static const QString openFileFilter;
 public:
 attFileDlg(QWidget *parent = 0);
 

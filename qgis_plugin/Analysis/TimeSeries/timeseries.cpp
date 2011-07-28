@@ -171,7 +171,7 @@ void timeSeriesDlg::plot()
     //                   106, 101, 107, 102, 108, 108, 108, 101 (aka step0), 101, 101, 105
     const int index[] = {5,   0,   6,   1,   7,   7,   7,   0,               0,   0,   4};
     QString var("step%1");
-    TIME_STEP = TIME_STEP / p->readNumEntry("pihm", var.arg(variableIndex));
+    TIME_STEP = TIME_STEP / p->readNumEntry("pihm", var.arg(index[variableIndex]));
     cout<<"here 4\n";
     cout<<"Time Step b = "<<TIME_STEP<<"\n";             //getchar(); getchar();
 

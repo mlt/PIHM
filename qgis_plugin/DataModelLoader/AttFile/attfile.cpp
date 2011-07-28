@@ -11,6 +11,8 @@ using namespace std;
 
 #include <qgsproject.h>
 
+const QString attFileDlg::openFileFilter("GDAL supported formats (*.*)");
+
 attFileDlg::attFileDlg(QWidget *parent)
 {
   setupUi(this);
@@ -121,7 +123,7 @@ void attFileDlg::precipBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,openFileFilter);
   PrecipLineEdit->setText(str);
 }
 
@@ -130,7 +132,7 @@ void attFileDlg::tempBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,openFileFilter);
   TempLineEdit->setText(str);
 }
 
@@ -139,7 +141,7 @@ void attFileDlg::humidBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   HumidLineEdit->setText(str);
 }
 
@@ -148,7 +150,7 @@ void attFileDlg::windBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   WindLineEdit->setText(str);
 }
 
@@ -157,7 +159,7 @@ void attFileDlg::gBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   GLineEdit->setText(str);
 }
 
@@ -166,7 +168,7 @@ void attFileDlg::rnBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   RnLineEdit->setText(str);
   GLineEdit->setText(str);
 }
@@ -176,7 +178,7 @@ void attFileDlg::pBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   PLineEdit->setText(str);
 }
 
@@ -185,7 +187,7 @@ void attFileDlg::soilBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   SoilLineEdit->setText(str);
 }
 
@@ -194,7 +196,7 @@ void attFileDlg::geolBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   GeolLineEdit->setText(str);
 }
 
@@ -203,7 +205,7 @@ void attFileDlg::mfBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   MFLineEdit->setText(str);
 }
 
@@ -213,7 +215,7 @@ void attFileDlg::mpBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   MPLineEdit->setText(str);
 }
 
@@ -222,7 +224,7 @@ void attFileDlg::lcBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   LCLineEdit->setText(str);
 }
 
@@ -231,7 +233,7 @@ void attFileDlg::isICBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   ISICLineEdit->setText(str);
 }
 
@@ -240,7 +242,7 @@ void attFileDlg::snowICBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   SnowICLineEdit->setText(str);
 }
 
@@ -249,7 +251,7 @@ void attFileDlg::overlandICBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   OverlandICLineEdit->setText(str);
 }
 
@@ -258,7 +260,7 @@ void attFileDlg::unsatICBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   UnSatICLineEdit->setText(str);
 }
 
@@ -267,7 +269,7 @@ void attFileDlg::satICBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   SatICLineEdit->setText(str);
 }
 
@@ -276,7 +278,7 @@ void attFileDlg::bcBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   BCLineEdit->setText(str);
 }
 
@@ -285,7 +287,7 @@ void attFileDlg::sourceBrowse()
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
 
-  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir,"File(*.adf *.ADF)");
+  QString str = QFileDialog::getOpenFileName(this, "Choose File", projDir, openFileFilter);
   SourceLineEdit->setText(str);
 }
 
@@ -980,27 +982,27 @@ void attFileDlg::run()
     double precipRanges[6], tempRanges[6], humidityRanges[6], windRanges[6], GRanges[6], RnRanges[6], pressureRanges[6], soilRanges[6], geolRanges[6], mfRanges[6], mpRanges[6], LAIRanges[6], ISICRanges[6], SnowICRanges[6], OverlandICRanges[6], UnSatICRanges[6], SatICRanges[6], BCRanges[6], sourceRanges[6];
 
     GDALAllRegister();
-    precip     = (GDALDataset *)GDALOpen(qPrintable((PrecipLineEdit->text())), GA_ReadOnly);
-    temp       = (GDALDataset *)GDALOpen(qPrintable((TempLineEdit->text())), GA_ReadOnly);
-    humidity   = (GDALDataset *)GDALOpen(qPrintable((HumidLineEdit->text())), GA_ReadOnly);
-    wind       = (GDALDataset *)GDALOpen(qPrintable((WindLineEdit->text())), GA_ReadOnly);
+    precip     = (GDALDataset *)GDALOpen(PrecipLineEdit->text().toUtf8(), GA_ReadOnly);
+    temp       = (GDALDataset *)GDALOpen(TempLineEdit->text().toUtf8(), GA_ReadOnly);
+    humidity   = (GDALDataset *)GDALOpen(HumidLineEdit->text().toUtf8(), GA_ReadOnly);
+    wind       = (GDALDataset *)GDALOpen(WindLineEdit->text().toUtf8(), GA_ReadOnly);
 
-    G       = (GDALDataset *)GDALOpen(qPrintable((WindLineEdit->text())), GA_ReadOnly);
+    G       = (GDALDataset *)GDALOpen(WindLineEdit->text().toUtf8(), GA_ReadOnly);
     //??G          = (GDALDataset *)GDALOpen(qPrintable((GLineEdit->text())), GA_ReadOnly);
-    Rn         = (GDALDataset *)GDALOpen(qPrintable((RnLineEdit->text())), GA_ReadOnly);
-    pressure   = (GDALDataset *)GDALOpen(qPrintable((PLineEdit->text())), GA_ReadOnly);
-    soil       = (GDALDataset *)GDALOpen(qPrintable((SoilLineEdit->text())), GA_ReadOnly);
-    geol       = (GDALDataset *)GDALOpen(qPrintable((GeolLineEdit->text())), GA_ReadOnly);
-    mf         = (GDALDataset *)GDALOpen(qPrintable((MFLineEdit->text())), GA_ReadOnly);
-    mp         = (GDALDataset *)GDALOpen(qPrintable((MPLineEdit->text())), GA_ReadOnly);
-    LAI        = (GDALDataset *)GDALOpen(qPrintable((LCLineEdit->text())), GA_ReadOnly);
-    ISIC       = (GDALDataset *)GDALOpen(qPrintable((ISICLineEdit->text())), GA_ReadOnly);
-    SnowIC     = (GDALDataset *)GDALOpen(qPrintable((SnowICLineEdit->text())), GA_ReadOnly);
-    OverlandIC = (GDALDataset *)GDALOpen(qPrintable((OverlandICLineEdit->text())), GA_ReadOnly);
-    UnSatIC    = (GDALDataset *)GDALOpen(qPrintable((UnSatICLineEdit->text())), GA_ReadOnly);
-    SatIC      = (GDALDataset *)GDALOpen(qPrintable((SatICLineEdit->text())), GA_ReadOnly);
-    BC         = (GDALDataset *)GDALOpen(qPrintable((BCLineEdit->text())), GA_ReadOnly);
-    source     = (GDALDataset *)GDALOpen(qPrintable((SourceLineEdit->text())), GA_ReadOnly);
+    Rn         = (GDALDataset *)GDALOpen(RnLineEdit->text().toUtf8(), GA_ReadOnly);
+    pressure   = (GDALDataset *)GDALOpen(PLineEdit->text().toUtf8(), GA_ReadOnly);
+    soil       = (GDALDataset *)GDALOpen(SoilLineEdit->text().toUtf8(), GA_ReadOnly);
+    geol       = (GDALDataset *)GDALOpen(GeolLineEdit->text().toUtf8(), GA_ReadOnly);
+    mf         = (GDALDataset *)GDALOpen(MFLineEdit->text().toUtf8(), GA_ReadOnly);
+    mp         = (GDALDataset *)GDALOpen(MPLineEdit->text().toUtf8(), GA_ReadOnly);
+    LAI        = (GDALDataset *)GDALOpen(LCLineEdit->text().toUtf8(), GA_ReadOnly);
+    ISIC       = (GDALDataset *)GDALOpen(ISICLineEdit->text().toUtf8(), GA_ReadOnly);
+    SnowIC     = (GDALDataset *)GDALOpen(SnowICLineEdit->text().toUtf8(), GA_ReadOnly);
+    OverlandIC = (GDALDataset *)GDALOpen(OverlandICLineEdit->text().toUtf8(), GA_ReadOnly);
+    UnSatIC    = (GDALDataset *)GDALOpen(UnSatICLineEdit->text().toUtf8(), GA_ReadOnly);
+    SatIC      = (GDALDataset *)GDALOpen(SatICLineEdit->text().toUtf8(), GA_ReadOnly);
+    BC         = (GDALDataset *)GDALOpen(BCLineEdit->text().toUtf8(), GA_ReadOnly);
+    source     = (GDALDataset *)GDALOpen(SourceLineEdit->text().toUtf8(), GA_ReadOnly);
 
     getExtent(precip, precipRanges);
     getExtent(temp, tempRanges);
