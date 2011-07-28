@@ -1,10 +1,12 @@
 #include <QtGui>
 #include "catchmentpolygon.h"
 #include "../../pihmRasterLIBS/lsm.h"
-#include "../../pihmRasterLIBS/catPoly.h"
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 #include <qgsproject.h>
+#include <gdal_alg.h>
+#include <gdal_priv.h>
+#include <ogrsf_frmts.h>
 
 #include <iostream>
 #include <fstream>
@@ -90,7 +92,7 @@ void CatchmentPolygonDlg::run()
   QString shxFile = projDir+"/VectorProcessing/"+id+".shx";
 
   ifstream inFile;      inFile.open(qPrintable(inputFileLineEdit->text()));
-  ofstream outFile;    outFile.open(qPrintable(outputFileLineEdit->text()));
+//  ofstream outFile;    outFile.open(qPrintable(outputFileLineEdit->text()));
   int runFlag = 1;
 
   log.open(qPrintable(logFileName), ios::app);
@@ -119,12 +121,12 @@ void CatchmentPolygonDlg::run()
   }
   else{
     log<<"<p>Checking... "<<qPrintable(outputShpFileName)<<"... ";
-    if(outFile == NULL) {
+/*    if(outFile == NULL) {
       log<<"<font size=3 color=red> Error!</p>";
       qWarning("\nCan not open output file name");
       runFlag = 0;
     }
-    else
+    else*/
       log<<"Done!</p>";
   }
   log.close();
@@ -140,7 +142,22 @@ void CatchmentPolygonDlg::run()
     messageLog->reload();
     QApplication::processEvents();
 
-    int err = catchmentPoly((char *)qPrintable(inputFileName), "dummy", (char *)qPrintable(outputShpFileName), (char *)qPrintable(outputDbfFileName));
+    Convert(inputFileName, outputShpFileName);
+
+    char err = 0;
+    if (QFile::exists(shpFile) && !QFile::remove(shpFile)) err |= 1;
+    if (QFile::exists(dbfFile) && !QFile::remove(dbfFile)) err |= 2;
+    if (QFile::exists(shxFile) && !QFile::remove(shxFile)) err |= 4;
+    const char* msg[] = {" shp", " dbf", " shx"};
+    QString s("Failed to remove old:");
+    char idx = 0;
+    for(; err; err>>=1, ++idx)
+      if (err & 1) {
+        s += msg[idx];
+      }
+    if (idx)
+      QMessageBox::warning(this, "Failed to remove old files", s);
+
     QFile::copy(outputShpFileName, shpFile);
     QFile::copy(outputDbfFileName, dbfFile);
     QFile::copy(outputShxFileName, shxFile);
@@ -165,6 +182,29 @@ void CatchmentPolygonDlg::run()
 //??			applicationPointer->addLayer(QStringList(outputShpFileName), NULL);
     }
   }
+}
+
+void CatchmentPolygonDlg::Convert(QString inputFileName, QString outputShpFileName) {
+    GDALDataset* input = (GDALDataset*) GDALOpen ( inputFileName.toUtf8(), GA_ReadOnly);
+    GDALRasterBandH rb = input->GetRasterBand(1);
+    const char* proj = input->GetProjectionRef();
+    OGRSpatialReference sr(proj); //    sr.importFromWkt(proj);
+    const char pszDriverName[] = "ESRI Shapefile";
+    OGRSFDriver *poDriver = OGRSFDriverRegistrar::GetRegistrar()->GetDriverByName( pszDriverName );
+    if (QFile::exists(outputShpFileName))
+      poDriver->DeleteDataSource(outputShpFileName.toUtf8());
+    OGRDataSource *poDS = poDriver->CreateDataSource( outputShpFileName.toUtf8(), NULL );
+    if (NULL != poDS) {
+      OGRLayer *output = poDS->CreateLayer( "polygon_out", &sr, wkbPolygon, NULL );
+      OGRFieldDefn oField( "lineNum", OFTInteger );
+      output->CreateField( &oField ); // != OGRERR_NONE
+      char* options[] = {"8CONNECTED=8"};
+      // TODO: Move it away from static and make progress bar feedback
+      GDALPolygonize( rb, rb, output, 0, options, NULL, NULL );
+      OGRDataSource::DestroyDataSource( poDS );
+    } else
+      QMessageBox::critical(NULL, "Failed to create output shapefile", outputShpFileName);
+    GDALClose(input);
 }
 
 void CatchmentPolygonDlg::help()

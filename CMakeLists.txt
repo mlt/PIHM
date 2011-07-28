@@ -20,6 +20,7 @@ IF( WIN32 )
   set( CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR} )
   set( CPACK_NSIS_INSTALL_ROOT "C:" )
   set( CPACK_OUTPUT_FILE_NAME "pihm_mod_2.3.2-qgis_1.7-win32.exe" )
+  set( CPACK_TEMPORARY_PACKAGE_FILE_NAME ${CPACK_TOPLEVEL_DIRECTORY}${CPACK_OUTPUT_FILE_NAME} )
   SET(CPACK_PACKAGE_INSTALL_DIRECTORY "OSGeo4W")
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.

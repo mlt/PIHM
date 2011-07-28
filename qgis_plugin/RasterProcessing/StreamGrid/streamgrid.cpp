@@ -182,11 +182,12 @@ void StreamGridDlg::suggestMe(){
   inFile >> tempChar; inFile >> NoData;
 
   cout <<"Rows= " <<Rows<<" Cols= "<<Cols<<" ND= "<<NoData<<"\n";
-  sortedData = (int *)malloc(Rows*Cols* sizeof(int));
+//  sortedData = (int *)malloc(Rows*Cols* sizeof(int));
+//  if (NULL != sortedData) {
   for(int i=0; i<Rows*Cols; i++) {
     inFile >> tempInt;
     if(tempInt >= 0) {
-      sortedData[i] = tempInt;
+//        sortedData[i] = tempInt;
       count++;
     }
   }
@@ -194,11 +195,11 @@ void StreamGridDlg::suggestMe(){
   sprintf(strThresh, "%d", (int)(count*0.02));
   QString qstrThresh(strThresh);
   inputThreshLineEdit->setText(strThresh);
-/*
   QgsProject *p = QgsProject::instance();
   QString projDir = p->readPath(p->readEntry("pihm", "projDir"));
   outputFileLineEdit->setText(projDir+"/RasterProcessing/str"+qstrThresh+".asc");
-*/
+//    free(sortedData);
+//  }
 }
 
 void StreamGridDlg::help()

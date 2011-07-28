@@ -15,6 +15,8 @@ void setApplicationPointer(QgisInterface *);
 //??
 QgisInterface* applicationPointer;
 
+static void Convert(QString inputFileName, QString outputShpFileName);
+
 public slots:
 void inputBrowse();
 void outputBrowse();

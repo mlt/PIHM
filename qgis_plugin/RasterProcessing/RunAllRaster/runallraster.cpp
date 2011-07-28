@@ -14,7 +14,8 @@
 #include "../../pihmRasterLIBS/streamSegmentationShp.h"
 #include "../../pihmRasterLIBS/catProcessing.h"
 #include "../../pihmRasterLIBS/lsm.h"
-#include "../../pihmRasterLIBS/catPoly.h"
+//#include "../../pihmRasterLIBS/catPoly.h"
+#include "../CatchmentPolygon/catchmentpolygon.h"
 
 #include "../../pihmLIBS/helpDialog/helpdialog.h"
 
@@ -188,7 +189,7 @@ void RunAllRaster::on_pushButtonRun_clicked()
   err = streamSegmentation((char *)qPrintable(str), (char *)qPrintable(fdr), (char *)qPrintable(lnk), "node.dat");
   err = streamSegmentationShp((char *)qPrintable(str), (char *)qPrintable(fdr), (char *)qPrintable(strShp), (char *)qPrintable(strDbf));
   err = catchmentGrid((char *)qPrintable(lnk), (char *)qPrintable(fdr), (char *)qPrintable(cat));
-  err = catchmentPoly((char *)qPrintable(cat), "dummy", (char *)qPrintable(catShp), (char *)qPrintable(catDbf));
+  CatchmentPolygonDlg::Convert(cat, catShp);
 
   QFile::copy(strShp, shpFiles);
   QFile::copy(strDbf, dbfFiles);

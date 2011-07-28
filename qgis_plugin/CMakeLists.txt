@@ -37,8 +37,6 @@ SET (pihmgis_SRCS
 	pihmRasterLIBS/streamSegmentationShp.cpp
 	pihmRasterLIBS/catProcessing.h
 	pihmRasterLIBS/catProcessing.cpp
-	pihmRasterLIBS/catPoly.h
-	pihmRasterLIBS/catPoly.cpp
 	RasterProcessing/FillPits/fillpits.cpp	
 	RasterProcessing/FlowGrid/flowgrid.cpp
 	RasterProcessing/StreamGrid/streamgrid.cpp
