@@ -102,7 +102,7 @@ static const QgisPlugin::PLUGINTYPE sPluginType = QgisPlugin::UI;
  * @param theQGisInterface - Pointer to the QGIS interface object
  */
 PIHMgis::PIHMgis(QgisInterface * theQgisInterface) :
-  QgisPlugin(sName,sDescription,sPluginVersion,sPluginType),
+  QgisPlugin(sName,sDescription,QString(),sPluginVersion,sPluginType),
   mQGisIface(theQgisInterface)
 {
 }

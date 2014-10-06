@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 2.8)
 
 if( WIN32 )
-	set( OSGEO_DIR "C:\\OSGeo4W" )
-	set( ENV{GDAL_ROOT} ${OSGEO_DIR} )
-	set( ENV{QTDIR} ${OSGEO_DIR} )
+  if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+    set( OSGEO_DIR "C:\\OSGeo4W64" )
+  else()
+    set( OSGEO_DIR "C:\\OSGeo4W" )
+  endif()
+  set( ENV{GDAL_ROOT} ${OSGEO_DIR} )
+  set( ENV{QTDIR} ${OSGEO_DIR} )
 endif()
 
 SET (pihmgis_SRCS
@@ -172,7 +176,7 @@ SET (pihmgis_RCCS  pihmgis.qrc
 )
 
 find_package(GDAL REQUIRED)
-find_package(Qt4 REQUIRED COMPONENTS Qt3Support QtCore QtGui)
+find_package(Qt4 REQUIRED COMPONENTS Qt3Support QtCore QtGui QtXml)
 include(${QT_USE_FILE})
 
 QT4_WRAP_UI (pihmgis_UIS_H  ${pihmgis_UIS})
@@ -185,23 +189,39 @@ add_definitions( -DGUI_EXPORT= -DCORE_EXPORT= )
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR} ${GDAL_INCLUDE_DIR} )
 
+set (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+find_package(Shapelib)
+
+link_directories(${OSGEO_DIR}/lib ${OSGEO_DIR}/apps/qgis/lib ${CMAKE_BINARY_DIR}/shapelib/src/shapelib)
+ADD_LIBRARY (pihmgisplugin MODULE ${pihmgis_SRCS} ${pihmgis_MOC_SRCS} ${pihmgis_RCC_SRCS} ${pihmgis_UIS_H})
+
 if( WIN32 )
 	add_definitions( -D_CRT_SECURE_NO_WARNINGS=1 )
-	link_directories(${OSGEO_DIR}\\lib ${OSGEO_DIR}\\apps\\qgis\\lib )
 	include_directories(
      ${OSGEO_DIR}\\apps\\qgis\\include
      ${OSGEO_DIR}\\include\\qwt
      ${OSGEO_DIR}\\include
 	)
 	set ( QWT_LIB "qwt5" )
-	set ( LIBSHP "shapelib_i" )
+	if (NOT SHAPELIB_FOUND)
+	  include(ExternalProject)
+	  ExternalProject_Add(shapelib
+	    URL "http://download.osgeo.org/shapelib/shapelib-1.3.0.tar.gz"
+	    PREFIX "${CMAKE_BINARY_DIR}/shapelib"
+	    CONFIGURE_COMMAND ""
+	    BUILD_COMMAND nmake -f makefile.vc
+	    BUILD_IN_SOURCE 1
+	    # INSTALL_DIR "${CMAKE_BINARY_DIR}/shapelib"
+	    INSTALL_COMMAND ""
+	    )
+	  add_dependencies(pihmgisplugin shapelib)
+	  include_directories( "${CMAKE_BINARY_DIR}/shapelib/src/shapelib" )
+	endif()
 else() # Works for Ubuntu 11.04
 	include_directories( /usr/include/qgis /usr/include/qwt-qt4 )
 	set ( QWT_LIB "qwt-qt4" )
-	set ( LIBSHP "shp" )
 endif()
 
-ADD_LIBRARY (pihmgisplugin MODULE ${pihmgis_SRCS} ${pihmgis_MOC_SRCS} ${pihmgis_RCC_SRCS} ${pihmgis_UIS_H})
 # debug only
 #set(LIBRARY_OUTPUT_PATH /usr/lib/qgis/plugins) 
 
@@ -210,7 +230,7 @@ target_link_libraries(pihmgisplugin
 	qgis_core
 	${QWT_LIB}
 	${QT_LIBRARIES}
-	${LIBSHP}
+	${SHAPELIB_LIBRARY}
 	#	sundials_cvode
 	#	sundials_nvecserial
 	#	${SUNDIALS_LINUX_EXTRA}
@@ -220,7 +240,8 @@ if( WIN32 )
 	#set( CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP true )
 	set( CMAKE_INSTALL_DEBUG_LIBRARIES true )
 	install(TARGETS pihmgisplugin
-	LIBRARY DESTINATION "apps\\qgis\\plugins")
+	COMPONENT gis
+	LIBRARY DESTINATION "apps/qgis/plugins")
 else() # GNU/Linux
 	install(TARGETS pihmgisplugin
 	LIBRARY DESTINATION "lib/qgis/plugins")

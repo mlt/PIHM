@@ -37,6 +37,7 @@
 
   ;Set compression
   SetCompressor @CPACK_NSIS_COMPRESSOR@
+  RequestExecutionLevel user
 
 @CPACK_NSIS_DEFINES@   
 

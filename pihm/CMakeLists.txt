@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 
 add_definitions( -DSUNDIALS_240=1 )
 
-if( WIN32 )
-	set( SUNDIALS_DIR "C:\\Progra~1\\sundials" )
-else() # Should work for Ubuntu 11.04 with sudo. QGis doesn't work with symlinked plugin :( Give a try to QGIS_PLUGINPATH
-	set ( SUNDIALS_LINUX_EXTRA lapack )
-endif()
 
 # set( CMAKE_BUILD_TYPE Release FORCE)
 
@@ -23,15 +18,31 @@ set( pihm_SRCS
 
 #include_directories( ${GDAL_INCLUDE_DIR} ) #${CMAKE_CURRENT_BINARY_DIR}
 
+# Will make no harm on non-windows platforms.
+# link_directories shall come before add_executable but extra dependency after
+set( SUNDIALS_DIR "${CMAKE_BINARY_DIR}/sundials" )
+link_directories( ${SUNDIALS_DIR}/lib)
+
+add_executable(pihm ${pihm_SRCS})
+
 if( WIN32 )
+  include(ExternalProject)
+  ExternalProject_Add(sundials
+    URL "http://computation.llnl.gov/casc/sundials/download/code/sundials-2.5.0.tar.gz"
+    # PREFIX "${CMAKE_CURRENT_BINARY_DIR}/sundials"
+    # INSTALL_DIR "${SUNDIALS_DIR}"
+    CMAKE_CACHE_ARGS "-DCMAKE_INSTALL_PREFIX:PATH=${SUNDIALS_DIR}"
+    # INSTALL_COMMAND ""
+    )
+  add_dependencies(pihm sundials)
+
 	add_definitions( -D_CRT_SECURE_NO_WARNINGS=1 )
-	link_directories( ${SUNDIALS_DIR}\\lib)
 	include_directories( ${SUNDIALS_DIR}\\include )
 else() # Works for Ubuntu 11.04
 	link_directories( /usr/lib/lapack )
+	set ( SUNDIALS_LINUX_EXTRA lapack )
 endif()
 
-add_executable(pihm ${pihm_SRCS})
 target_link_libraries(pihm
 	sundials_cvode
 	sundials_nvecserial
@@ -39,4 +50,5 @@ target_link_libraries(pihm
 )
 
 install(TARGETS pihm
+COMPONENT pihm
 RUNTIME DESTINATION "bin")

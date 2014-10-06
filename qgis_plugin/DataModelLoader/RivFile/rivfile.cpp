@@ -285,7 +285,7 @@ void rivFileDlg::run()
 
     // Remove existing layer from QGis {
     QgsMapLayerRegistry *r = QgsMapLayerRegistry::instance();
-    QMap<QString, QgsMapLayer*> & ll = r->mapLayers();
+    const QMap<QString, QgsMapLayer*> & ll = r->mapLayers();
     QMap<QString, QgsMapLayer*>::iterator iter = ll.begin();
     QStringList delme;
     while (iter != ll.end()) {
